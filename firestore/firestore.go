@@ -14,15 +14,15 @@ const CollectionName = "users"
 type UsersClient struct {
 	projectID string
 	client    *firestore.Client
-	ctx context.Context
+	ctx       context.Context
 }
 
 type User struct {
-	Username  string
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Username  string    `firestore:"username"`
+	Email     string    `firestore:"email"`
+	Password  string    `firestore:"password"`
+	CreatedAt time.Time `firestore:"createdAt"`
+	UpdatedAt time.Time `firestore:"updatedAt"`
 }
 
 func NewClient(projectID string) (*UsersClient, error) {
@@ -53,8 +53,7 @@ func (uf *UsersClient) Create(u *users.User) error {
 		CreatedAt: u.CreatedAt(),
 		UpdatedAt: u.UpdatedAt(),
 	}
-	res, err := uf.client.Collection(CollectionName).Doc(u.Username()).Set(uf.ctx, user)
-	log.Println("wtf-time", res.UpdateTime.String(), user)
+	_, err := uf.client.Collection(CollectionName).Doc(u.Username()).Set(uf.ctx, user)
 	if err != nil {
 		return err
 	}
@@ -64,6 +63,7 @@ func (uf *UsersClient) Create(u *users.User) error {
 func (uf *UsersClient) GetUserByEmail(email string) (users.User, error) {
 	var fireUser User
 	var user users.User
+	log.Println("email ", email)
 	iter := uf.client.Collection(CollectionName).Where("email", "==", email).Documents(uf.ctx)
 	doc, err := iter.Next()
 	if err != nil {
@@ -72,7 +72,7 @@ func (uf *UsersClient) GetUserByEmail(email string) (users.User, error) {
 	if err := doc.DataTo(&fireUser); err != nil {
 		return user, err
 	}
-	user = dataToUser(doc.Ref.ID, fireUser)
+	user = dataToUser(fireUser)
 	return user, nil
 }
 
@@ -84,11 +84,13 @@ func (uf *UsersClient) GetAll() ([]users.User, error) {
 		doc, err := iter.Next()
 		if err == iterator.Done {
 			break
-		}
-		if err != nil {
+		} else if err != nil {
 			return u, err
 		}
-		user := dataToUser(doc.Ref.ID, fireUser)
+		if err := doc.DataTo(&fireUser); err != nil {
+			return u, err
+		}
+		user := dataToUser(fireUser)
 		u = append(u, user)
 	}
 	return u, nil
@@ -99,9 +101,9 @@ func (uf *UsersClient) deleteAll() error {
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }
 
-func dataToUser(ID string, firUser User) users.User {
+func dataToUser(firUser User) users.User {
 	var user users.User
-	user.SetUsername(ID)
+	user.SetUsername(firUser.Username)
 	user.SetEmail(firUser.Email)
 	user.SetPassword(firUser.Password)
 	user.SetCreatedAt(firUser.CreatedAt)

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"github.com/bxcodec/faker/v3"
 	"testing"
 )
 
@@ -12,30 +13,23 @@ func getTestingUser() User {
 	return user
 }
 
-func TestOkPassword(t *testing.T) {
-	user := getTestingUser()
-	originalPassword := user.password
-	hash, err := generatePassword(user.password)
-	user.password = hash
-	if err != nil {
-		t.Error(err)
-	}
-	if !user.CheckPassword(originalPassword) {
-		t.Error("password should match")
-	}
+func createUser() User{
+	var user User
+	user.SetUsername(faker.Username())
+	user.SetEmail(faker.Email())
+	user.SetPassword(faker.Password())
+	return user
 }
 
-func TestWrongPassword(t *testing.T) {
-	user := getTestingUser()
-	badPassword := "badPassword"
-	hash, err := generatePassword(user.password)
-	user.password = hash
-	if err != nil {
-		t.Error(err)
+func createTwentyUsers(manager *UserManager) error {
+	for i := 0; i < 20; i++ {
+		user := createUser()
+		err := manager.CreateUser(&user)
+		if err != nil {
+			return err
+		}
 	}
-	if user.CheckPassword(badPassword) {
-		t.Error("password should not match")
-	}
+	return nil
 }
 
 func TestCreateUser(t *testing.T) {
@@ -55,11 +49,11 @@ func TestCreateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	storedUser, err := manager.GetUserByEmail(user.email)
+	storedUser, err := manager.GetUserByEmail(user.Email())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if storedUser != user {
+	if storedUser.Username() != user.Username() {
 		t.Error("The user was not the expected user")
 	}
 	if err = client.deleteAll(); err != nil {
@@ -70,20 +64,28 @@ func TestCreateUser(t *testing.T) {
 func TestGetUsers(t *testing.T) {
 	client, err := NewClient()
 	if err != nil {
-		t.Error("can not create client")
+		t.Fatal("can not create client")
 	}
-	defer func () {
+	defer func() {
 		err = client.CloseClient()
 		if err != nil {
-			t.Error("can not close client")
+			t.Fatal("can not close client")
 		}
 	}()
 	manager := NewManager(client)
-	_, err = manager.GetUsers()
-	if err != nil {
-		t.Error(err)
+	if err := createTwentyUsers(manager); err != nil {
+		t.Fatal(err)
 	}
+	myUsers, err := manager.GetUsers()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(myUsers) != 20 {
+		t.Errorf("got %d users, expect %d users", len(myUsers), 20)
+	}
+
 	if err = client.deleteAll(); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 }

@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"github.com/bxcodec/faker/v3"
 )
 
 type FakeUsersClient struct {
@@ -35,26 +34,10 @@ func (fuc *FakeUsersClient) GetUserByEmail(email string) (User, error) {
 }
 
 func (fuc *FakeUsersClient) GetAll() ([]User, error) {
-	for i := 0; i <= fuc.NumberOfUsers; i++ {
-		user := createUser()
-		fuc.CreatedUsers = append(fuc.CreatedUsers, user)
-	}
 	return fuc.CreatedUsers, nil
 }
 
 func (fuc *FakeUsersClient) deleteAll() error {
 	fuc.CreatedUsers = nil
 	return nil
-}
-
-func createUser() User{
-	password, err := generatePassword(faker.Password())
-	if err != nil {
-		password = ""
-	}
-	return User{
-		username: faker.Username(),
-		email:    faker.Email(),
-		password: password,
-	}
 }

@@ -1,7 +1,7 @@
 package firestore
 
 import (
-	"gitlab.com/codehell/chusers"
+	"github.com/codehell/users"
 	"testing"
 )
 

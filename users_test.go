@@ -1,13 +1,15 @@
 package users
 
-import "testing"
+import (
+	"testing"
+)
 
 func getTestingUser() User {
-	return User{
-		username: "cazaplanetas",
-		email:    "cazaplanetas@gmail.com",
-		password: "secret",
-	}
+	user := User{}
+	user.SetUsername("cazaplanetas")
+	user.SetEmail("cazaplanetas@gmail.com")
+	user.SetPassword("secret")
+	return user
 }
 
 func TestOkPassword(t *testing.T) {
@@ -48,7 +50,7 @@ func TestCreateUser(t *testing.T) {
 		}
 	}()
 	manager := NewManager(client)
-	user := User{"codehell", "cazaplanetas@gmail.com", "secret"}
+	user := getTestingUser()
 	err = manager.CreateUser(&user)
 	if err != nil {
 		t.Fatal(err)

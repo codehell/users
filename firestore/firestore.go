@@ -3,9 +3,10 @@ package firestore
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"fmt"
 	"github.com/codehell/users"
 	"google.golang.org/api/iterator"
+	"log"
+	"time"
 )
 
 const CollectionName = "users"
@@ -14,6 +15,14 @@ type UsersClient struct {
 	projectID string
 	client    *firestore.Client
 	ctx context.Context
+}
+
+type User struct {
+	Username  string
+	Email     string
+	Password  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewClient(projectID string) (*UsersClient, error) {
@@ -37,11 +46,15 @@ func (uf *UsersClient) CloseClient() error {
 }
 
 func (uf *UsersClient) Create(u *users.User) error {
-	_, err := uf.client.Collection(CollectionName).Doc(u.Username()).Set(uf.ctx, map[string]interface{}{
-		"username": u.Username(),
-		"email": u.Email(),
-		"password": u.Password(),
-	})
+	user := User{
+		Username:  u.Username(),
+		Email:     u.Email(),
+		Password:  u.Password(),
+		CreatedAt: u.CreatedAt(),
+		UpdatedAt: u.UpdatedAt(),
+	}
+	res, err := uf.client.Collection(CollectionName).Doc(u.Username()).Set(uf.ctx, user)
+	log.Println("wtf-time", res.UpdateTime.String(), user)
 	if err != nil {
 		return err
 	}
@@ -49,19 +62,23 @@ func (uf *UsersClient) Create(u *users.User) error {
 }
 
 func (uf *UsersClient) GetUserByEmail(email string) (users.User, error) {
+	var fireUser User
 	var user users.User
 	iter := uf.client.Collection(CollectionName).Where("email", "==", email).Documents(uf.ctx)
 	doc, err := iter.Next()
 	if err != nil {
 		return user, err
 	}
-	dataToUser(doc, &user)
+	if err := doc.DataTo(&fireUser); err != nil {
+		return user, err
+	}
+	user = dataToUser(doc.Ref.ID, fireUser)
 	return user, nil
 }
 
 func (uf *UsersClient) GetAll() ([]users.User, error) {
-	user := users.User{}
-	var users []users.User
+	var u []users.User
+	var fireUser User
 	iter := uf.client.Collection(CollectionName).Documents(uf.ctx)
 	for {
 		doc, err := iter.Next()
@@ -69,12 +86,12 @@ func (uf *UsersClient) GetAll() ([]users.User, error) {
 			break
 		}
 		if err != nil {
-			return users, err
+			return u, err
 		}
-		dataToUser(doc, &user)
-		users = append(users, user)
+		user := dataToUser(doc.Ref.ID, fireUser)
+		u = append(u, user)
 	}
-	return users, nil
+	return u, nil
 }
 
 func (uf *UsersClient) deleteAll() error {
@@ -82,11 +99,14 @@ func (uf *UsersClient) deleteAll() error {
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }
 
-func dataToUser(doc *firestore.DocumentSnapshot, user *users.User) {
-	data := doc.Data()
-	user.SetUsername(fmt.Sprintf("%v", doc.Ref.ID))
-	user.SetEmail(fmt.Sprintf("%v", data["email"]))
-	user.SetPassword(fmt.Sprintf("%v", data["password"]))
+func dataToUser(ID string, firUser User) users.User {
+	var user users.User
+	user.SetUsername(ID)
+	user.SetEmail(firUser.Email)
+	user.SetPassword(firUser.Password)
+	user.SetCreatedAt(firUser.CreatedAt)
+	user.SetUpdatedAt(firUser.UpdatedAt)
+	return user
 }
 
 func deleteCollection(ctx context.Context, client *firestore.Client,

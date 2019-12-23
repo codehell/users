@@ -4,22 +4,23 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alexedwards/argon2id"
+	"time"
 )
 
 var MinUsernameCharacters = 3
 var MinPasswordCharacters = 6
 
 type UserManager struct {
-	client UsersClient
+	client Client
 }
 
-type UsersClient interface {
+type Client interface {
 	Create(*User) error
 	GetUserByEmail(string) (User, error)
 	GetAll() ([]User, error)
 }
 
-func NewManager(uc UsersClient) *UserManager {
+func NewManager(uc Client) *UserManager {
 	um := new(UserManager)
 	um.client = uc
 	return um
@@ -33,10 +34,12 @@ func (um *UserManager) CreateUser(u *User) error {
 		return errors.New(fmt.Sprintf("username must have more than %d characters", MinPasswordCharacters))
 	}
 	password, err := generatePassword(u.password)
-	u.password = password
 	if err != nil {
 		return err
 	}
+	u.password = password
+	u.createdAt = time.Now()
+	u.updatedAt = time.Now()
 	return um.client.Create(u)
 }
 

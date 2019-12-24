@@ -2,28 +2,28 @@ package users
 
 import "testing"
 
-func TestOkPassword(t *testing.T) {
+func TestValidUsername(t *testing.T) {
+	client, _ := NewClient()
+	manager := NewManager(client)
 	user := getTestingUser()
-	originalPassword := user.password
-	hash, err := generatePassword(user.password)
-	user.password = hash
-	if err != nil {
-		t.Error(err)
-	}
-	if !user.CheckPassword(originalPassword) {
-		t.Error("password should match")
+	manager.MinUsernameCharacters = 12
+	manager.MaxUsernameCharacters = 12
+	if err := manager.CreateUser(&user); err != nil {
+		t.Fatal("username should have valid number of chars")
 	}
 }
 
-func TestWrongPassword(t *testing.T) {
+func TestInvalidUsername(t *testing.T) {
+	client, _ := NewClient()
+	manager := NewManager(client)
 	user := getTestingUser()
-	badPassword := "badPassword"
-	hash, err := generatePassword(user.password)
-	user.password = hash
-	if err != nil {
-		t.Error(err)
+	manager.MinUsernameCharacters = 13
+	if err := manager.CreateUser(&user); err != MinUsernameError {
+		t.Fatal("username should have less chars than allowed")
 	}
-	if user.CheckPassword(badPassword) {
-		t.Error("password should not match")
+	manager.MinUsernameCharacters = 3
+	manager.MaxUsernameCharacters = 11
+	if err := manager.CreateUser(&user); err != MaxUsernameError {
+		t.Fatal("username should have more chars than allowed")
 	}
 }

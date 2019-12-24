@@ -9,7 +9,7 @@ func getTestingUser() User {
 	user := User{}
 	user.SetUsername("cazaplanetas")
 	user.SetEmail("cazaplanetas@gmail.com")
-	user.SetPassword("secret")
+	user.SetPassword("secret1")
 	return user
 }
 
@@ -32,20 +32,27 @@ func createTwentyUsers(manager *UserManager) error {
 	return nil
 }
 
-func TestCreateUser(t *testing.T) {
+func createUserClientAndManager(user User) (User, Client, *UserManager, error) {
 	client, err := NewClient()
 	if err != nil {
-		t.Fatal("can not create client")
+		return user, nil, nil, err
 	}
+	manager := NewManager(client)
+	err = manager.CreateUser(&user)
+	if err != nil {
+		return user, nil, nil, err
+	}
+	return user, client, manager, nil
+}
+
+func TestCreateUser(t *testing.T) {
+	user, client, manager, err := createUserClientAndManager(getTestingUser())
 	defer func () {
-		err = client.CloseClient()
+		err = manager.Close()
 		if err != nil {
-			t.Fatal("can not close client")
+			t.Fatal(err)
 		}
 	}()
-	manager := NewManager(client)
-	user := getTestingUser()
-	err = manager.CreateUser(&user)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +63,7 @@ func TestCreateUser(t *testing.T) {
 	if storedUser.Username() != user.Username() {
 		t.Error("The user was not the expected user")
 	}
-	if err = client.deleteAll(); err != nil {
+	if err = client.DeleteAll(); err != nil {
 		t.Error(err)
 	}
 }
@@ -66,13 +73,13 @@ func TestGetUsers(t *testing.T) {
 	if err != nil {
 		t.Fatal("can not create client")
 	}
-	defer func() {
-		err = client.CloseClient()
+	manager := NewManager(client)
+	defer func () {
+		err = manager.Close()
 		if err != nil {
 			t.Fatal("can not close client")
 		}
 	}()
-	manager := NewManager(client)
 	if err := createTwentyUsers(manager); err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +92,42 @@ func TestGetUsers(t *testing.T) {
 		t.Errorf("got %d users, expect %d users", len(myUsers), 20)
 	}
 
-	if err = client.deleteAll(); err != nil {
+	if err = client.DeleteAll(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestOkPassword(t *testing.T) {
+	testingUser := getTestingUser()
+	user, _, manager, err := createUserClientAndManager(testingUser)
+	defer func () {
+		err = manager.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	if err != nil {
+		t.Error(err)
+	}
+	if !user.CheckPassword(testingUser.Password()) {
+		t.Error("password should match")
+	}
+}
+
+func TestWrongPassword(t *testing.T) {
+	testingUser := getTestingUser()
+	user, _, manager, err := createUserClientAndManager(testingUser)
+	defer func () {
+		err = manager.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	badPassword := "badPassword"
+	if err != nil {
+		t.Error(err)
+	}
+	if user.CheckPassword(badPassword) {
+		t.Error("password should not match")
 	}
 }

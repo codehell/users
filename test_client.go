@@ -15,7 +15,7 @@ func NewClient() (*FakeUsersClient, error) {
 	return fakeUsersClient, nil
 }
 
-func (*FakeUsersClient) CloseClient() error {
+func (*FakeUsersClient) Close() error {
 	return nil
 }
 
@@ -37,7 +37,7 @@ func (fuc *FakeUsersClient) GetAll() ([]User, error) {
 	return fuc.CreatedUsers, nil
 }
 
-func (fuc *FakeUsersClient) deleteAll() error {
+func (fuc *FakeUsersClient) DeleteAll() error {
 	fuc.CreatedUsers = nil
 	return nil
 }

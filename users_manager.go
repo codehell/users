@@ -2,44 +2,53 @@ package users
 
 import (
 	"errors"
-	"fmt"
 	"github.com/alexedwards/argon2id"
 	"time"
 )
 
-var MinUsernameCharacters = 3
-var MinPasswordCharacters = 6
+var MinUsernameError = errors.New("username is too sort")
+var MaxUsernameError = errors.New("username is too long")
+var MinPasswordError = errors.New("too sort password")
+var MaxPasswordError = errors.New("too long password")
+
 
 type UserManager struct {
 	client Client
+	MinUsernameCharacters int
+	MaxUsernameCharacters int
+	MinPasswordCharacters int
+	MaxPasswordCharacters int
 }
 
 type Client interface {
 	Create(*User) error
+	Close() error
 	GetUserByEmail(string) (User, error)
 	GetAll() ([]User, error)
+	DeleteAll() error
 }
 
-func NewManager(uc Client) *UserManager {
+func NewManager(c Client) *UserManager {
 	um := new(UserManager)
-	um.client = uc
+	um.client = c
+	um.MinUsernameCharacters = 3
+	um.MaxUsernameCharacters = 16
+	um.MinPasswordCharacters = 6
+	um.MaxPasswordCharacters = 32
 	return um
 }
 
 func (um *UserManager) CreateUser(u *User) error {
-	if len(u.username) <= MinUsernameCharacters {
-		return errors.New(fmt.Sprintf("username must have more than %d characters", MinUsernameCharacters))
-	}
-	if len(u.username) <= MinPasswordCharacters {
-		return errors.New(fmt.Sprintf("username must have more than %d characters", MinPasswordCharacters))
+	if err := validateUser(um, u); err != nil {
+		return err
 	}
 	password, err := generatePassword(u.password)
 	if err != nil {
 		return err
 	}
 	u.password = password
-	u.createdAt = time.Now()
-	u.updatedAt = time.Now()
+	u.CreatedAt = time.Now()
+	u.UpdatedAt = time.Now()
 	return um.client.Create(u)
 }
 
@@ -51,12 +60,11 @@ func (um *UserManager) GetUsers() ([]User, error) {
 	return um.client.GetAll()
 }
 
-func (u *User) CheckPassword(password string) bool {
-	match, err := argon2id.ComparePasswordAndHash(password, u.password)
-	if err != nil {
-		return false
+func (um *UserManager) Close() error {
+	if um.client != nil {
+		return um.client.Close()
 	}
-	return match
+	return errors.New("client is nil")
 }
 
 func generatePassword(password string) (string, error) {
@@ -65,4 +73,21 @@ func generatePassword(password string) (string, error) {
 		return "", err
 	}
 	return hash, nil
+}
+
+func validateUser(um *UserManager, u *User) error {
+	usernameLen := len(u.Username())
+	if usernameLen < um.MinUsernameCharacters {
+		return MinUsernameError
+	}
+	if usernameLen > um.MaxUsernameCharacters {
+		return MaxUsernameError
+	}
+	if usernameLen < um.MinPasswordCharacters {
+		return MinPasswordError
+	}
+	if usernameLen > um.MaxPasswordCharacters {
+		return MaxPasswordError
+	}
+	return nil
 }

@@ -1,13 +1,16 @@
 package users
 
-import "time"
+import (
+	"github.com/alexedwards/argon2id"
+	"time"
+)
 
 type User struct {
 	username  string
 	email     string
 	password  string
-	createdAt time.Time
-	updatedAt time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (u *User) Username() string {
@@ -34,18 +37,10 @@ func (u *User) SetPassword(password string) {
 	u.password = password
 }
 
-func (u *User) CreatedAt() time.Time {
-	return u.createdAt
-}
-
-func (u *User) SetCreatedAt(date time.Time) {
-	u.createdAt = date
-}
-
-func (u *User) UpdatedAt() time.Time {
-	return u.updatedAt
-}
-
-func (u *User) SetUpdatedAt(date time.Time) {
-	u.updatedAt = date
+func (u *User) CheckPassword(password string) bool {
+	match, err := argon2id.ComparePasswordAndHash(password, u.password)
+	if err != nil {
+		return false
+	}
+	return match
 }

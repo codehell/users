@@ -5,7 +5,6 @@ import (
 	"context"
 	"github.com/codehell/users"
 	"google.golang.org/api/iterator"
-	"log"
 	"time"
 )
 
@@ -32,12 +31,12 @@ func NewClient(projectID string) (*UsersClient, error) {
 	var err error
 	uf.client, err = firestore.NewClient(uf.ctx, projectID)
 	if err != nil {
-		return uf, err
+		return nil, err
 	}
 	return uf, nil
 }
 
-func (uf *UsersClient) CloseClient() error {
+func (uf *UsersClient) Close() error {
 	err := uf.client.Close()
 	if err != nil {
 		return err
@@ -50,8 +49,8 @@ func (uf *UsersClient) Create(u *users.User) error {
 		Username:  u.Username(),
 		Email:     u.Email(),
 		Password:  u.Password(),
-		CreatedAt: u.CreatedAt(),
-		UpdatedAt: u.UpdatedAt(),
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
 	}
 	_, err := uf.client.Collection(CollectionName).Doc(u.Username()).Set(uf.ctx, user)
 	if err != nil {
@@ -63,7 +62,6 @@ func (uf *UsersClient) Create(u *users.User) error {
 func (uf *UsersClient) GetUserByEmail(email string) (users.User, error) {
 	var fireUser User
 	var user users.User
-	log.Println("email ", email)
 	iter := uf.client.Collection(CollectionName).Where("email", "==", email).Documents(uf.ctx)
 	doc, err := iter.Next()
 	if err != nil {
@@ -96,7 +94,7 @@ func (uf *UsersClient) GetAll() ([]users.User, error) {
 	return u, nil
 }
 
-func (uf *UsersClient) deleteAll() error {
+func (uf *UsersClient) DeleteAll() error {
 	ref := uf.client.Collection(CollectionName)
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }
@@ -106,8 +104,8 @@ func dataToUser(firUser User) users.User {
 	user.SetUsername(firUser.Username)
 	user.SetEmail(firUser.Email)
 	user.SetPassword(firUser.Password)
-	user.SetCreatedAt(firUser.CreatedAt)
-	user.SetUpdatedAt(firUser.UpdatedAt)
+	user.CreatedAt = firUser.CreatedAt
+	user.UpdatedAt = firUser.UpdatedAt
 	return user
 }
 

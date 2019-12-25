@@ -11,13 +11,9 @@ var MaxUsernameError = errors.New("username is too long")
 var MinPasswordError = errors.New("too sort password")
 var MaxPasswordError = errors.New("too long password")
 
-
 type Manager struct {
-	client Client
-	MinUsernameCharacters int
-	MaxUsernameCharacters int
-	MinPasswordCharacters int
-	MaxPasswordCharacters int
+	client                Client
+	validator             Validator
 }
 
 type Client interface {
@@ -28,18 +24,17 @@ type Client interface {
 	DeleteAll() error
 }
 
+type Validator func(user *User) error
+
 func NewManager(c Client) *Manager {
 	um := new(Manager)
 	um.client = c
-	um.MinUsernameCharacters = 3
-	um.MaxUsernameCharacters = 16
-	um.MinPasswordCharacters = 6
-	um.MaxPasswordCharacters = 32
+	um.validator = defaultValidator
 	return um
 }
 
 func (um *Manager) CreateUser(u *User) error {
-	if err := validateUser(um, u); err != nil {
+	if err := defaultValidator(u); err != nil {
 		return err
 	}
 	password, err := generatePassword(u.password)
@@ -67,6 +62,10 @@ func (um *Manager) Close() error {
 	return errors.New("client is nil")
 }
 
+func (um *Manager) SetValidator(val Validator) {
+	um.validator = val
+}
+
 func generatePassword(password string) (string, error) {
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {
@@ -75,18 +74,22 @@ func generatePassword(password string) (string, error) {
 	return hash, nil
 }
 
-func validateUser(um *Manager, u *User) error {
+func defaultValidator(u *User) error {
+	MinUsernameCharacters := 4
+	MaxUsernameCharacters := 16
+	MinPasswordCharacters := 6
+	MaxPasswordCharacters := 32
 	usernameLen := len(u.Username())
-	if usernameLen < um.MinUsernameCharacters {
+	if usernameLen < MinUsernameCharacters {
 		return MinUsernameError
 	}
-	if usernameLen > um.MaxUsernameCharacters {
+	if usernameLen > MaxUsernameCharacters {
 		return MaxUsernameError
 	}
-	if usernameLen < um.MinPasswordCharacters {
+	if usernameLen < MinPasswordCharacters {
 		return MinPasswordError
 	}
-	if usernameLen > um.MaxPasswordCharacters {
+	if usernameLen > MaxPasswordCharacters {
 		return MaxPasswordError
 	}
 	return nil

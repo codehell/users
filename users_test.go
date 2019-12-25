@@ -21,7 +21,7 @@ func createUser() User{
 	return user
 }
 
-func createTwentyUsers(manager *UserManager) error {
+func createTwentyUsers(manager *Manager) error {
 	for i := 0; i < 20; i++ {
 		user := createUser()
 		err := manager.CreateUser(&user)
@@ -32,7 +32,7 @@ func createTwentyUsers(manager *UserManager) error {
 	return nil
 }
 
-func createUserClientAndManager(user User) (User, Client, *UserManager, error) {
+func createUserClientAndManager(user User) (User, Client, *Manager, error) {
 	client, err := NewClient()
 	if err != nil {
 		return user, nil, nil, err

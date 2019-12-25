@@ -12,7 +12,7 @@ var MinPasswordError = errors.New("too sort password")
 var MaxPasswordError = errors.New("too long password")
 
 
-type UserManager struct {
+type Manager struct {
 	client Client
 	MinUsernameCharacters int
 	MaxUsernameCharacters int
@@ -28,8 +28,8 @@ type Client interface {
 	DeleteAll() error
 }
 
-func NewManager(c Client) *UserManager {
-	um := new(UserManager)
+func NewManager(c Client) *Manager {
+	um := new(Manager)
 	um.client = c
 	um.MinUsernameCharacters = 3
 	um.MaxUsernameCharacters = 16
@@ -38,7 +38,7 @@ func NewManager(c Client) *UserManager {
 	return um
 }
 
-func (um *UserManager) CreateUser(u *User) error {
+func (um *Manager) CreateUser(u *User) error {
 	if err := validateUser(um, u); err != nil {
 		return err
 	}
@@ -52,15 +52,15 @@ func (um *UserManager) CreateUser(u *User) error {
 	return um.client.Create(u)
 }
 
-func (um *UserManager) GetUserByEmail(email string) (User, error) {
+func (um *Manager) GetUserByEmail(email string) (User, error) {
 	return um.client.GetUserByEmail(email)
 }
 
-func (um *UserManager) GetUsers() ([]User, error) {
+func (um *Manager) GetUsers() ([]User, error) {
 	return um.client.GetAll()
 }
 
-func (um *UserManager) Close() error {
+func (um *Manager) Close() error {
 	if um.client != nil {
 		return um.client.Close()
 	}
@@ -75,7 +75,7 @@ func generatePassword(password string) (string, error) {
 	return hash, nil
 }
 
-func validateUser(um *UserManager, u *User) error {
+func validateUser(um *Manager, u *User) error {
 	usernameLen := len(u.Username())
 	if usernameLen < um.MinUsernameCharacters {
 		return MinUsernameError

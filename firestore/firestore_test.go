@@ -22,7 +22,7 @@ func createUser() users.User {
 	return user
 }
 
-func createTwentyUsers(manager *users.UserManager) error {
+func createTwentyUsers(manager *users.Manager) error {
 	for i := 0; i < 20; i++ {
 		user := createUser()
 		err := manager.CreateUser(&user)
@@ -33,7 +33,7 @@ func createTwentyUsers(manager *users.UserManager) error {
 	return nil
 }
 
-func createUserClientAndManager(user users.User) (users.User, users.Client, *users.UserManager, error) {
+func createUserClientAndManager(user users.User) (users.User, users.Client, *users.Manager, error) {
 	client, err := NewClient("codehell-users")
 	if err != nil {
 		return user, nil, nil, err

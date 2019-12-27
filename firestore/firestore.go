@@ -10,7 +10,7 @@ import (
 
 const CollectionName = "users"
 
-type UsersClient struct {
+type Client struct {
 	projectID string
 	client    *firestore.Client
 	ctx       context.Context
@@ -24,8 +24,8 @@ type User struct {
 	UpdatedAt time.Time `firestore:"updatedAt"`
 }
 
-func NewClient(projectID string) (*UsersClient, error) {
-	uf := new(UsersClient)
+func NewClient(projectID string) (*Client, error) {
+	uf := new(Client)
 	uf.projectID = projectID
 	uf.ctx = context.Background()
 	var err error
@@ -36,7 +36,7 @@ func NewClient(projectID string) (*UsersClient, error) {
 	return uf, nil
 }
 
-func (uf *UsersClient) Close() error {
+func (uf *Client) Close() error {
 	err := uf.client.Close()
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (uf *UsersClient) Close() error {
 	return nil
 }
 
-func (uf *UsersClient) Create(u *users.User) error {
+func (uf *Client) Create(u *users.User) error {
 	user := User{
 		Username:  u.Username(),
 		Email:     u.Email(),
@@ -59,7 +59,7 @@ func (uf *UsersClient) Create(u *users.User) error {
 	return nil
 }
 
-func (uf *UsersClient) GetUserByEmail(email string) (users.User, error) {
+func (uf *Client) GetUserByEmail(email string) (users.User, error) {
 	var fireUser User
 	var user users.User
 	iter := uf.client.Collection(CollectionName).Where("email", "==", email).Documents(uf.ctx)
@@ -74,7 +74,7 @@ func (uf *UsersClient) GetUserByEmail(email string) (users.User, error) {
 	return user, nil
 }
 
-func (uf *UsersClient) GetAll() ([]users.User, error) {
+func (uf *Client) GetAll() ([]users.User, error) {
 	var u []users.User
 	var fireUser User
 	iter := uf.client.Collection(CollectionName).Documents(uf.ctx)
@@ -94,7 +94,7 @@ func (uf *UsersClient) GetAll() ([]users.User, error) {
 	return u, nil
 }
 
-func (uf *UsersClient) DeleteAll() error {
+func (uf *Client) DeleteAll() error {
 	ref := uf.client.Collection(CollectionName)
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }

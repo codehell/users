@@ -8,7 +8,7 @@ import (
 
 func getTestingUser() users.User {
 	user := users.User{}
-	user.SetUsername("cazaplaneta")
+	user.SetUsername("cazaplanetas")
 	user.SetEmail("cazaplanetas@gmail.com")
 	user.SetPassword("secret")
 	return user

@@ -4,39 +4,56 @@ import (
 	"testing"
 )
 
-// TODO: Estos test estan provando el validador por defecto
-// Realmente deberia hacer un test unitario del validador
-// Y otros test mas genericos para el manager
-
-func TestValidUsername(t *testing.T) {
-	client, _ := NewClient()
-	manager := NewManager(client)
-	user := getTestingUser()
-	if err := manager.CreateUser(&user); err != nil {
-		t.Error("username should have valid number of chars")
+func TestCreateUser(t *testing.T) {
+	testingUser := getTestingUser()
+	testingUser.SetRole("admin")
+	user, client, manager, err := createUserClientAndManager(testingUser)
+	defer func() {
+		err = manager.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	if err != nil {
+		t.Fatal(err)
+	}
+	storedUser, err := manager.GetUserByEmail(user.Email())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if storedUser.Username() != user.Username() {
+		t.Error("The user was not the expected user")
+	}
+	if err = client.DeleteAll(); err != nil {
+		t.Error(err)
 	}
 }
 
-func TestInvalidUsername(t *testing.T) {
-	client, _ := NewClient()
+func TestGetUsers(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatal("can not create client")
+	}
 	manager := NewManager(client)
-	user := getTestingUser()
-	user.SetUsername("caz")
-	if err := manager.CreateUser(&user); err != MinUsernameError {
-		t.Fatal("username should have less chars than allowed")
+	defer func() {
+		err = manager.Close()
+		if err != nil {
+			t.Fatal("can not close client")
+		}
+	}()
+	if err := createTwentyUsers(manager); err != nil {
+		t.Fatal(err)
 	}
-	user.SetUsername("supercalifragilistospialidoso")
-	if err := manager.CreateUser(&user); err != MaxUsernameError {
-		t.Error("username should have more chars than allowed")
+	myUsers, err := manager.GetUsers()
+	if err != nil {
+		t.Fatal(err)
 	}
-}
 
-func TestRoleCanNotBeEmpty(t *testing.T) {
-	client, _ := NewClient()
-	manager := NewManager(client)
-	user := getTestingUser()
-	user.SetRole("")
-	if err := manager.CreateUser(&user); err == nil {
-		t.Error("user manager create a user with empty role")
+	if len(myUsers) != 20 {
+		t.Errorf("got %d users, expect %d users", len(myUsers), 20)
+	}
+
+	if err = client.DeleteAll(); err != nil {
+		t.Fatal(err)
 	}
 }

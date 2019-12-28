@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 type Manager struct {
 	client    Client
 	validator Validator

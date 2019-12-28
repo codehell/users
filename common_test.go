@@ -1,22 +1,24 @@
 package users
 
-import "github.com/bxcodec/faker/v3"
+import (
+	"github.com/bxcodec/faker/v3"
+)
 
 func getTestingUser() User {
 	user := User{}
-	user.SetUsername("cazaplanetas")
-	user.SetEmail("cazaplanetas@gmail.com")
-	user.SetPassword("secret1")
-	user.SetRole("admin")
+	user.Username = "cazaplanetas"
+	user.Email = "cazaplanetas@gmail.com"
+	user.Password = "secret1"
+	user.Role = "admin"
 	return user
 }
 
 func createUser() User {
 	var user User
-	user.SetUsername(faker.Username())
-	user.SetEmail(faker.Email())
-	user.SetPassword(faker.Password())
-	user.SetRole("admin")
+	user.Username = faker.Username()
+	user.Email = faker.Email()
+	user.Password = faker.Password()[:12]
+	user.Role = "admin"
 	return user
 }
 

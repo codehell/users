@@ -16,7 +16,7 @@ func TestOkPassword(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !user.CheckPassword(testingUser.Password()) {
+	if !user.CheckPassword(testingUser.Password) {
 		t.Error("password should match")
 	}
 }

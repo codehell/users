@@ -15,8 +15,8 @@ func defaultValidator(u User) error {
 	maxUsernameCharacters := 16
 	minPasswordCharacters := 6
 	maxPasswordCharacters := 32
-	usernameLen := len(u.Username())
-	userPassLen := len(u.password)
+	usernameLen := len(u.Username)
+	userPassLen := len(u.Password)
 	if usernameLen < minUsernameCharacters {
 		return MinUsernameError
 	}
@@ -29,7 +29,7 @@ func defaultValidator(u User) error {
 	if userPassLen > maxPasswordCharacters {
 		return MaxPasswordError
 	}
-	if u.GetRole() == "" {
+	if u.Role == "" {
 		return InvalidRoleError
 	}
 	return nil

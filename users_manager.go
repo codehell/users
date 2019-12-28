@@ -32,11 +32,11 @@ func (um *Manager) CreateUser(u *User) error {
 	if err := defaultValidator(*u); err != nil {
 		return err
 	}
-	password, err := generatePassword(u.password)
+	password, err := generatePassword(u.Password)
 	if err != nil {
 		return err
 	}
-	u.password = password
+	u.Password = password
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
 	return um.client.Create(u)

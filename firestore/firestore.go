@@ -38,8 +38,7 @@ func NewClient(projectID string) (*Client, error) {
 }
 
 func (uf *Client) Close() error {
-	err := uf.client.Close()
-	if err != nil {
+	if err := uf.client.Close(); err != nil {
 		return err
 	}
 	return nil
@@ -47,14 +46,14 @@ func (uf *Client) Close() error {
 
 func (uf *Client) Create(u *users.User) error {
 	user := User{
-		Username:  u.Username(),
-		Email:     u.Email(),
-		Password:  u.Password(),
-		Role:      u.GetRole(),
+		Username:  u.Username,
+		Email:     u.Email,
+		Password:  u.Password,
+		Role:      u.Role,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}
-	_, err := uf.client.Collection(CollectionName).Doc(u.Username()).Set(uf.ctx, user)
+	_, err := uf.client.Collection(CollectionName).Doc(u.Email).Set(uf.ctx, user)
 	if err != nil {
 		return err
 	}
@@ -64,8 +63,7 @@ func (uf *Client) Create(u *users.User) error {
 func (uf *Client) GetUserByEmail(email string) (users.User, error) {
 	var fireUser User
 	var user users.User
-	iter := uf.client.Collection(CollectionName).Where("email", "==", email).Documents(uf.ctx)
-	doc, err := iter.Next()
+	doc, err := uf.client.Collection(CollectionName).Doc(email).Get(uf.ctx)
 	if err != nil {
 		return user, err
 	}
@@ -101,14 +99,15 @@ func (uf *Client) DeleteAll() error {
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }
 
-func dataToUser(firUser User) users.User {
+func dataToUser(fireUser User) users.User {
 	var user users.User
-	user.SetUsername(firUser.Username)
-	user.SetEmail(firUser.Email)
-	user.SetPassword(firUser.Password)
-	user.SetRole(firUser.Role)
-	user.CreatedAt = firUser.CreatedAt
-	user.UpdatedAt = firUser.UpdatedAt
+	user.ID = fireUser.Email
+	user.Username = fireUser.Username
+	user.Email = fireUser.Email
+	user.Password = fireUser.Password
+	user.Role = fireUser.Role
+	user.CreatedAt = fireUser.CreatedAt
+	user.UpdatedAt = fireUser.UpdatedAt
 	return user
 }
 

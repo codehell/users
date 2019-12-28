@@ -6,7 +6,7 @@ import (
 
 func TestCreateUser(t *testing.T) {
 	testingUser := getTestingUser()
-	testingUser.SetRole("admin")
+	testingUser.Role = "admin"
 	user, client, manager, err := createUserClientAndManager(testingUser)
 	defer func() {
 		err = manager.Close()
@@ -17,11 +17,11 @@ func TestCreateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	storedUser, err := manager.GetUserByEmail(user.Email())
+	storedUser, err := manager.GetUserByEmail(user.Email)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if storedUser.Username() != user.Username() {
+	if storedUser.Username != user.Username {
 		t.Error("The user was not the expected user")
 	}
 	if err = client.DeleteAll(); err != nil {
@@ -42,7 +42,7 @@ func TestGetUsers(t *testing.T) {
 		}
 	}()
 	if err := createTwentyUsers(manager); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	myUsers, err := manager.GetUsers()
 	if err != nil {

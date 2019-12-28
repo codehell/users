@@ -9,6 +9,7 @@ type User struct {
 	username  string
 	email     string
 	password  string
+	role      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -43,4 +44,12 @@ func (u *User) CheckPassword(password string) bool {
 		return false
 	}
 	return match
+}
+
+func (u *User) SetRole(role string) {
+	u.role = role
+}
+
+func (u *User) GetRole() string {
+	return u.role
 }

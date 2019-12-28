@@ -20,6 +20,7 @@ type User struct {
 	Username  string    `firestore:"username"`
 	Email     string    `firestore:"email"`
 	Password  string    `firestore:"password"`
+	Role      string    `firestore:"role"`
 	CreatedAt time.Time `firestore:"createdAt"`
 	UpdatedAt time.Time `firestore:"updatedAt"`
 }
@@ -49,6 +50,7 @@ func (uf *Client) Create(u *users.User) error {
 		Username:  u.Username(),
 		Email:     u.Email(),
 		Password:  u.Password(),
+		Role:      u.GetRole(),
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}
@@ -104,6 +106,7 @@ func dataToUser(firUser User) users.User {
 	user.SetUsername(firUser.Username)
 	user.SetEmail(firUser.Email)
 	user.SetPassword(firUser.Password)
+	user.SetRole(firUser.Role)
 	user.CreatedAt = firUser.CreatedAt
 	user.UpdatedAt = firUser.UpdatedAt
 	return user

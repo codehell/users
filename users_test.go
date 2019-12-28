@@ -10,6 +10,7 @@ func getTestingUser() User {
 	user.SetUsername("cazaplanetas")
 	user.SetEmail("cazaplanetas@gmail.com")
 	user.SetPassword("secret1")
+	user.SetRole("admin")
 	return user
 }
 
@@ -18,6 +19,7 @@ func createUser() User{
 	user.SetUsername(faker.Username())
 	user.SetEmail(faker.Email())
 	user.SetPassword(faker.Password())
+	user.SetRole("admin")
 	return user
 }
 
@@ -46,7 +48,9 @@ func createUserClientAndManager(user User) (User, Client, *Manager, error) {
 }
 
 func TestCreateUser(t *testing.T) {
-	user, client, manager, err := createUserClientAndManager(getTestingUser())
+	testingUser := getTestingUser()
+	testingUser.SetRole("admin")
+	user, client, manager, err := createUserClientAndManager(testingUser)
 	defer func () {
 		err = manager.Close()
 		if err != nil {

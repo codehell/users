@@ -6,14 +6,10 @@ import (
 	"time"
 )
 
-var MinUsernameError = errors.New("username is too sort")
-var MaxUsernameError = errors.New("username is too long")
-var MinPasswordError = errors.New("too sort password")
-var MaxPasswordError = errors.New("too long password")
 
 type Manager struct {
-	client                Client
-	validator             Validator
+	client    Client
+	validator Validator
 }
 
 type Client interface {
@@ -24,7 +20,7 @@ type Client interface {
 	DeleteAll() error
 }
 
-type Validator func(user *User) error
+type Validator func(user User) error
 
 func NewManager(c Client) *Manager {
 	um := new(Manager)
@@ -34,7 +30,7 @@ func NewManager(c Client) *Manager {
 }
 
 func (um *Manager) CreateUser(u *User) error {
-	if err := defaultValidator(u); err != nil {
+	if err := defaultValidator(*u); err != nil {
 		return err
 	}
 	password, err := generatePassword(u.password)
@@ -72,25 +68,4 @@ func generatePassword(password string) (string, error) {
 		return "", err
 	}
 	return hash, nil
-}
-
-func defaultValidator(u *User) error {
-	MinUsernameCharacters := 4
-	MaxUsernameCharacters := 16
-	MinPasswordCharacters := 6
-	MaxPasswordCharacters := 32
-	usernameLen := len(u.Username())
-	if usernameLen < MinUsernameCharacters {
-		return MinUsernameError
-	}
-	if usernameLen > MaxUsernameCharacters {
-		return MaxUsernameError
-	}
-	if usernameLen < MinPasswordCharacters {
-		return MinPasswordError
-	}
-	if usernameLen > MaxPasswordCharacters {
-		return MaxPasswordError
-	}
-	return nil
 }

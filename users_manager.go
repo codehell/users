@@ -61,6 +61,14 @@ func (um *Manager) SetValidator(val Validator) {
 	um.validator = val
 }
 
+func (um *Manager) CheckPassword(u User, password string) bool {
+	match, err := argon2id.ComparePasswordAndHash(password, u.Password)
+	if err != nil {
+		return false
+	}
+	return match
+}
+
 func generatePassword(password string) (string, error) {
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {

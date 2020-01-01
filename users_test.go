@@ -5,8 +5,16 @@ import (
 )
 
 func TestOkPassword(t *testing.T) {
-	testingUser := getTestingUser()
-	user, _, manager, err := createUserClientAndManager(testingUser)
+	user := getTestingUser()
+	client, err := NewClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	manager := NewManager(client)
+	err = manager.CreateUser(&user)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer func() {
 		err = manager.Close()
 		if err != nil {
@@ -16,25 +24,24 @@ func TestOkPassword(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !user.CheckPassword(testingUser.Password) {
+	if !manager.CheckPassword(user, getTestingUser().Password) {
 		t.Error("password should match")
 	}
 }
 
 func TestWrongPassword(t *testing.T) {
-	testingUser := getTestingUser()
-	user, _, manager, err := createUserClientAndManager(testingUser)
-	defer func() {
-		err = manager.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}()
-	badPassword := "badPassword"
+	user := getTestingUser()
+	client, err := NewClient()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if user.CheckPassword(badPassword) {
+	manager := NewManager(client)
+	err = manager.CreateUser(&user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	badPassword := "badPassword"
+	if manager.CheckPassword(user, badPassword) {
 		t.Error("password should not match")
 	}
 }

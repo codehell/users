@@ -5,23 +5,29 @@ import (
 )
 
 func TestCreateUser(t *testing.T) {
-	testingUser := getTestingUser()
-	testingUser.Role = "admin"
-	user, client, manager, err := createUserClientAndManager(testingUser)
-	defer func() {
-		err = manager.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}()
+	user := getTestingUser()
+	user.Role = "admin"
+	client, err := NewClient()
 	if err != nil {
 		t.Fatal(err)
 	}
+	manager := NewManager(client)
+	err = manager.CreateUser(&user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if client != nil {
+			if err := manager.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}()
 	storedUser, err := manager.GetUserByEmail(user.Email)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if storedUser.Username != user.Username {
+	if storedUser.Email != user.Email {
 		t.Error("The user was not the expected user")
 	}
 	if err = client.DeleteAll(); err != nil {

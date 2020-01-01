@@ -35,23 +35,16 @@ func createTwentyUsers(manager *users.Manager) error {
 	return nil
 }
 
-func createUserClientAndManager(user users.User) (users.User, users.Client, *users.Manager, error) {
+func TestCreateUser(t *testing.T) {
+	user := getTestingUser()
 	client, err := NewClient("codehell-users")
 	if err != nil {
-		return user, nil, nil, err
+		t.Fatal(err)
 	}
 	manager := users.NewManager(client)
 	err = manager.CreateUser(&user)
 	if err != nil {
-		return user, nil, nil, err
-	}
-	return user, client, manager, nil
-}
-
-func TestCreateUser(t *testing.T) {
-	user, client, manager, err := createUserClientAndManager(getTestingUser())
-	if err != nil {
-		t.Fatal(err)
+		t.Fatal()
 	}
 	defer func() {
 		if err := manager.Close(); err != nil {
@@ -101,34 +94,50 @@ func TestGetUsers(t *testing.T) {
 }
 
 func TestOkPassword(t *testing.T) {
-	testingUser := getTestingUser()
-	user, _, manager, err := createUserClientAndManager(testingUser)
+	user := getTestingUser()
+	password := user.Password
+	client, err := NewClient("codehell-users")
+	if err != nil {
+		t.Fatal(err)
+	}
+	manager := users.NewManager(client)
 	defer func() {
-		if err := manager.Close(); err != nil {
-			t.Error(err)
+		err = manager.Close()
+		if err != nil {
+			t.Log("can not close client")
 		}
 	}()
+	err = manager.CreateUser(&user)
 	if err != nil {
-		t.Error(err)
+		t.Fatal()
 	}
-	if !user.CheckPassword(testingUser.Password) {
+	if !manager.CheckPassword(user, password) {
 		t.Error("password should match")
 	}
 }
 
 func TestWrongPassword(t *testing.T) {
-	testingUser := getTestingUser()
-	user, _, manager, err := createUserClientAndManager(testingUser)
+	user := getTestingUser()
+	client, err := NewClient("codehell-users")
+	if err != nil {
+		t.Fatal(err)
+	}
+	manager := users.NewManager(client)
 	defer func() {
-		if err := manager.Close(); err != nil {
-			t.Error(err)
+		err = manager.Close()
+		if err != nil {
+			t.Log("can not close client")
 		}
 	}()
+	err = manager.CreateUser(&user)
+	if err != nil {
+		t.Fatal()
+	}
 	badPassword := "badPassword"
 	if err != nil {
 		t.Error(err)
 	}
-	if user.CheckPassword(badPassword) {
+	if manager.CheckPassword(user, badPassword) {
 		t.Error("password should not match")
 	}
 }

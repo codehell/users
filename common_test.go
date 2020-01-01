@@ -32,16 +32,3 @@ func createTwentyUsers(manager *Manager) error {
 	}
 	return nil
 }
-
-func createUserClientAndManager(user User) (User, Client, *Manager, error) {
-	client, err := NewClient()
-	if err != nil {
-		return user, nil, nil, err
-	}
-	manager := NewManager(client)
-	err = manager.CreateUser(&user)
-	if err != nil {
-		return user, nil, nil, err
-	}
-	return user, client, manager, nil
-}

@@ -14,6 +14,7 @@ type Client struct {
 	projectID string
 	client    *firestore.Client
 	ctx       context.Context
+	validator users.Validator
 }
 
 type User struct {
@@ -27,11 +28,11 @@ type User struct {
 
 func NewClient(projectID string) (*Client, error) {
 	uf := new(Client)
+	uf.validator = users.DefaultValidator
 	uf.projectID = projectID
 	uf.ctx = context.Background()
 	var err error
-	uf.client, err = firestore.NewClient(uf.ctx, projectID)
-	if err != nil {
+	if uf.client, err = firestore.NewClient(uf.ctx, projectID); err != nil {
 		return nil, err
 	}
 	return uf, nil
@@ -45,6 +46,13 @@ func (uf *Client) Close() error {
 }
 
 func (uf *Client) Create(u *users.User) error {
+	if err := uf.validator(u); err != nil {
+		return err
+	}
+	var err error
+	if u.Password, err = users.GeneratePassword(u.Password); err != nil {
+		return err
+	}
 	user := User{
 		Username:  u.Username,
 		Email:     u.Email,
@@ -53,7 +61,7 @@ func (uf *Client) Create(u *users.User) error {
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}
-	_, err := uf.client.Collection(CollectionName).Doc(u.Email).Set(uf.ctx, user)
+	_, err = uf.client.Collection(CollectionName).Doc(u.Email).Set(uf.ctx, user)
 	if err != nil {
 		return err
 	}
@@ -97,6 +105,10 @@ func (uf *Client) GetAll() ([]users.User, error) {
 func (uf *Client) DeleteAll() error {
 	ref := uf.client.Collection(CollectionName)
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
+}
+
+func (uf *Client) SetValidator(validator users.Validator) {
+	uf.validator = validator
 }
 
 func dataToUser(fireUser User) users.User {

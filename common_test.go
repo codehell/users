@@ -22,10 +22,10 @@ func createUser() User {
 	return user
 }
 
-func createTwentyUsers(manager *Manager) error {
+func createTwentyUsers(client Client) error {
 	for i := 0; i < 20; i++ {
 		user := createUser()
-		err := manager.CreateUser(&user)
+		err := client.Create(&user)
 		if err != nil {
 			return err
 		}

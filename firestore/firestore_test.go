@@ -24,10 +24,10 @@ func createUser() users.User {
 	return user
 }
 
-func createTwentyUsers(manager *users.Manager) error {
+func createTwentyUsers(client Client) error {
 	for i := 0; i < 20; i++ {
 		user := createUser()
-		err := manager.CreateUser(&user)
+		err := client.Create(&user)
 		if err != nil {
 			return err
 		}
@@ -41,17 +41,16 @@ func TestCreateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	manager := users.NewManager(client)
-	err = manager.CreateUser(&user)
+	err = client.Create(&user)
 	if err != nil {
 		t.Fatal()
 	}
 	defer func() {
-		if err := manager.Close(); err != nil {
+		if err := client.Close(); err != nil {
 			t.Fatal(err)
 		}
 	}()
-	storedUser, err := manager.GetUserByEmail(user.Email)
+	storedUser, err := client.GetUserByEmail(user.Email)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,17 +68,16 @@ func TestGetUsers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	manager := users.NewManager(client)
 	defer func() {
-		err = manager.Close()
+		err = client.Close()
 		if err != nil {
 			t.Log("can not close client")
 		}
 	}()
-	if err := createTwentyUsers(manager); err != nil {
+	if err := createTwentyUsers(*client); err != nil {
 		t.Fatal(err)
 	}
-	myUsers, err := manager.GetUsers()
+	myUsers, err := client.GetAll()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,18 +98,17 @@ func TestOkPassword(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	manager := users.NewManager(client)
 	defer func() {
-		err = manager.Close()
+		err = client.Close()
 		if err != nil {
 			t.Log("can not close client")
 		}
 	}()
-	err = manager.CreateUser(&user)
+	err = client.Create(&user)
 	if err != nil {
 		t.Fatal()
 	}
-	if !manager.CheckPassword(user, password) {
+	if !users.CheckPassword(user, password) {
 		t.Error("password should match")
 	}
 }
@@ -122,14 +119,13 @@ func TestWrongPassword(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	manager := users.NewManager(client)
 	defer func() {
-		err = manager.Close()
+		err = client.Close()
 		if err != nil {
 			t.Log("can not close client")
 		}
 	}()
-	err = manager.CreateUser(&user)
+	err = client.Create(&user)
 	if err != nil {
 		t.Fatal()
 	}
@@ -137,7 +133,7 @@ func TestWrongPassword(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if manager.CheckPassword(user, badPassword) {
+	if users.CheckPassword(user, badPassword) {
 		t.Error("password should not match")
 	}
 }

@@ -3,14 +3,14 @@ package users
 import "errors"
 
 var (
-	MinUsernameError = errors.New("username is too sort")
-	MaxUsernameError = errors.New("username is too long")
-	MinPasswordError = errors.New("too sort password")
-	MaxPasswordError = errors.New("too long password")
-	InvalidRoleError = errors.New("role can not be empty")
+	ErrMinUsername = errors.New("username is too sort")
+	ErrMaxUsername = errors.New("username is too long")
+	ErrMinPassword = errors.New("too sort password")
+	ErrMaxPassword = errors.New("too long password")
+	ErrInvalidRole = errors.New("role can not be empty")
 )
 
-func defaultValidator(u User) error {
+func DefaultValidator(u *User) error {
 	minUsernameCharacters := 4
 	maxUsernameCharacters := 16
 	minPasswordCharacters := 6
@@ -18,19 +18,19 @@ func defaultValidator(u User) error {
 	usernameLen := len(u.Username)
 	userPassLen := len(u.Password)
 	if usernameLen < minUsernameCharacters {
-		return MinUsernameError
+		return ErrMinUsername
 	}
 	if usernameLen > maxUsernameCharacters {
-		return MaxUsernameError
+		return ErrMaxUsername
 	}
 	if userPassLen < minPasswordCharacters {
-		return MinPasswordError
+		return ErrMinPassword
 	}
 	if userPassLen > maxPasswordCharacters {
-		return MaxPasswordError
+		return ErrMaxPassword
 	}
 	if u.Role == "" {
-		return InvalidRoleError
+		return ErrInvalidRole
 	}
 	return nil
 }

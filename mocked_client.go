@@ -6,10 +6,12 @@ import (
 
 type FakeUsersClient struct {
 	CreatedUsers  []User
+	validator Validator
 }
 
 func NewClient() (*FakeUsersClient, error) {
 	fakeUsersClient := new(FakeUsersClient)
+	fakeUsersClient.validator = DefaultValidator
 	return fakeUsersClient, nil
 }
 
@@ -18,7 +20,14 @@ func (*FakeUsersClient) Close() error {
 }
 
 func (fuc *FakeUsersClient) Create(u *User) error {
+	if err := fuc.validator(u); err != nil {
+		return err
+	}
 	u.ID = u.Email
+	var err error
+	if u.Password, err = GeneratePassword(u.Password); err != nil {
+		return err
+	}
 	fuc.CreatedUsers = append(fuc.CreatedUsers, *u)
 	return nil
 }
@@ -39,4 +48,8 @@ func (fuc *FakeUsersClient) GetAll() ([]User, error) {
 func (fuc *FakeUsersClient) DeleteAll() error {
 	fuc.CreatedUsers = nil
 	return nil
+}
+
+func (fuc *FakeUsersClient) SetValidator(v Validator) {
+	fuc.validator = v
 }

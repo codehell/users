@@ -34,6 +34,29 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
+func TestStoreUser(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatal("can not create client")
+	}
+	defer func() {
+		err = client.Close()
+		if err != nil {
+			t.Fatal("can not close client")
+		}
+	}()
+	user := getTestingUser()
+	if err := StoreUser(user, client); err != nil {
+		t.Error(err)
+	}
+	if err := StoreUser(user, client); err != ErrUserAlreadyExists {
+		t.Error(err)
+	}
+	if err = client.DeleteAll(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGetUsers(t *testing.T) {
 	client, err := NewClient()
 	if err != nil {

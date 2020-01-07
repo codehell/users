@@ -107,6 +107,10 @@ func (uf *Client) DeleteAll() error {
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }
 
+func (uf *Client) Validator() users.Validator {
+	return uf.validator
+}
+
 func (uf *Client) SetValidator(validator users.Validator) {
 	uf.validator = validator
 }

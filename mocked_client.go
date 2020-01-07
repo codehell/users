@@ -53,3 +53,7 @@ func (fuc *FakeUsersClient) DeleteAll() error {
 func (fuc *FakeUsersClient) SetValidator(v Validator) {
 	fuc.validator = v
 }
+
+func (fuc *FakeUsersClient) Validator() Validator {
+	return fuc.validator
+}

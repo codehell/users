@@ -8,4 +8,5 @@ require (
 	github.com/bxcodec/faker/v3 v3.2.0
 	golang.org/x/crypto v0.0.0-20191205161847-0a08dada0ff9 // indirect
 	google.golang.org/api v0.15.0
+	gopkg.in/yaml.v2 v2.2.7
 )

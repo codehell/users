@@ -3,14 +3,29 @@ package users
 import (
 	"errors"
 	"github.com/alexedwards/argon2id"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"log"
 	"time"
 )
 
 func init() {
+	body, err := ioutil.ReadFile("users.config.yaml")
+	if err != nil {
+		log.Println("unable to read file")
+	}
 
+	var config config
+	if err := yaml.Unmarshal(body, &config); err != nil {
+		log.Println(err)
+	}
 }
 
 var ErrUserAlreadyExists = errors.New("users: user already exists")
+
+type config struct {
+	UniqueUsername bool `yaml:"unique_username"`
+}
 
 type User struct {
 	ID        interface{} `json:"id"`

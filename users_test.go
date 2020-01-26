@@ -1,17 +1,19 @@
-package users
+package users_test
 
 import (
+	"github.com/codehell/users"
+	"github.com/codehell/users/mocked_client"
 	"testing"
 )
 
 func TestCreateUser(t *testing.T) {
 	user := getTestingUser()
 	user.Role = "admin"
-	client, err := NewClient()
+	client, err := mocked_client.NewClient()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.Create(&user)
+	err = client.StoreUser(&user)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,21 +37,21 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestStoreUser(t *testing.T) {
-	client, err := NewClient()
+	client, err := mocked_client.NewClient()
 	if err != nil {
 		t.Fatal("can not create client")
 	}
 	defer func() {
 		err = client.Close()
 		if err != nil {
-			t.Fatal("can not close client")
+			t.Log("can not close client")
 		}
 	}()
 	user := getTestingUser()
-	if err := StoreUser(user, client); err != nil {
+	if err := users.StoreUser(user, client); err != nil {
 		t.Error(err)
 	}
-	if err := StoreUser(user, client); err != ErrUserAlreadyExists {
+	if err := users.StoreUser(user, client); err != users.ErrUserAlreadyExists {
 		t.Error(err)
 	}
 	if err = client.DeleteAll(); err != nil {
@@ -58,7 +60,7 @@ func TestStoreUser(t *testing.T) {
 }
 
 func TestGetUsers(t *testing.T) {
-	client, err := NewClient()
+	client, err := mocked_client.NewClient()
 	if err != nil {
 		t.Fatal("can not create client")
 	}
@@ -87,11 +89,11 @@ func TestGetUsers(t *testing.T) {
 
 func TestOkPassword(t *testing.T) {
 	user := getTestingUser()
-	client, err := NewClient()
+	client, err := mocked_client.NewClient()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.Create(&user)
+	err = client.StoreUser(&user)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,23 +106,23 @@ func TestOkPassword(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !CheckPassword(user, getTestingUser().Password) {
+	if !users.CheckPassword(user, getTestingUser().Password) {
 		t.Error("password should match")
 	}
 }
 
 func TestWrongPassword(t *testing.T) {
 	user := getTestingUser()
-	client, err := NewClient()
+	client, err := mocked_client.NewClient()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.Create(&user)
+	err = client.StoreUser(&user)
 	if err != nil {
 		t.Fatal(err)
 	}
 	badPassword := "badPassword"
-	if CheckPassword(user, badPassword) {
+	if users.CheckPassword(user, badPassword) {
 		t.Error("password should not match")
 	}
 }

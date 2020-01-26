@@ -1,11 +1,12 @@
-package users
+package users_test
 
 import (
 	"github.com/bxcodec/faker/v3"
+	"github.com/codehell/users"
 )
 
-func getTestingUser() User {
-	user := User{}
+func getTestingUser() users.User {
+	user := users.User{}
 	user.Username = "cazaplanetas"
 	user.Email = "cazaplanetas@gmail.com"
 	user.Password = "secret1"
@@ -13,8 +14,8 @@ func getTestingUser() User {
 	return user
 }
 
-func createUser() User {
-	var user User
+func createUser() users.User {
+	var user users.User
 	user.Username = faker.Username()
 	user.Email = faker.Email()
 	user.Password = faker.Password()[:12]
@@ -22,10 +23,10 @@ func createUser() User {
 	return user
 }
 
-func createTwentyUsers(client Client) error {
+func createTwentyUsers(client users.Client) error {
 	for i := 0; i < 20; i++ {
 		user := createUser()
-		err := client.Create(&user)
+		err := client.StoreUser(&user)
 		if err != nil {
 			return err
 		}

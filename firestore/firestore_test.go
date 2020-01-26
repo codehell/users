@@ -1,8 +1,9 @@
-package firestore
+package firestore_test
 
 import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/codehell/users"
+	"github.com/codehell/users/firestore"
 	"testing"
 )
 
@@ -24,10 +25,10 @@ func createUser() users.User {
 	return user
 }
 
-func createTwentyUsers(client Client) error {
+func createTwentyUsers(client firestore.Client) error {
 	for i := 0; i < 20; i++ {
 		user := createUser()
-		err := client.Create(&user)
+		err := client.StoreUser(&user)
 		if err != nil {
 			return err
 		}
@@ -37,11 +38,11 @@ func createTwentyUsers(client Client) error {
 
 func TestCreateUser(t *testing.T) {
 	user := getTestingUser()
-	client, err := NewClient("codehell-users")
+	client, err := firestore.NewClient("codehell-users")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.Create(&user)
+	err = client.StoreUser(&user)
 	if err != nil {
 		t.Fatal()
 	}
@@ -64,7 +65,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUsers(t *testing.T) {
-	client, err := NewClient("codehell-users")
+	client, err := firestore.NewClient("codehell-users")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +95,7 @@ func TestGetUsers(t *testing.T) {
 func TestOkPassword(t *testing.T) {
 	user := getTestingUser()
 	password := user.Password
-	client, err := NewClient("codehell-users")
+	client, err := firestore.NewClient("codehell-users")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +105,7 @@ func TestOkPassword(t *testing.T) {
 			t.Log("can not close client")
 		}
 	}()
-	err = client.Create(&user)
+	err = client.StoreUser(&user)
 	if err != nil {
 		t.Fatal()
 	}
@@ -115,7 +116,7 @@ func TestOkPassword(t *testing.T) {
 
 func TestWrongPassword(t *testing.T) {
 	user := getTestingUser()
-	client, err := NewClient("codehell-users")
+	client, err := firestore.NewClient("codehell-users")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +126,7 @@ func TestWrongPassword(t *testing.T) {
 			t.Log("can not close client")
 		}
 	}()
-	err = client.Create(&user)
+	err = client.StoreUser(&user)
 	if err != nil {
 		t.Fatal()
 	}

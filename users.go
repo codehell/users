@@ -5,25 +5,12 @@ import (
 	"github.com/alexedwards/argon2id"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
 	"time"
 )
 
-func init() {
-	body, err := ioutil.ReadFile("users.config.yaml")
-	if err != nil {
-		log.Println("unable to read file")
-	}
-
-	var config config
-	if err := yaml.Unmarshal(body, &config); err != nil {
-		log.Println(err)
-	}
-}
-
 var ErrUserAlreadyExists = errors.New("users: user already exists")
 
-type config struct {
+type userConfig struct {
 	UniqueUsername bool `yaml:"unique_username"`
 }
 
@@ -38,26 +25,33 @@ type User struct {
 }
 
 type Client interface {
-	Create(*User) error
 	Close() error
+	StoreUser(*User) error
+	DeleteAll() error
 	GetAll() ([]User, error)
 	GetUserByEmail(string) (User, error)
 	Validator() Validator
-	DeleteAll() error
 	SetValidator(Validator)
 }
 
 type Validator func(user *User) error
 
 func StoreUser(u User, c Client) error {
+	config, err :=  getConfig()
+	if err != nil {
+		return err
+	}
 	validator := c.Validator()
 	if err := validator(&u); err != nil {
 		return err
 	}
-	if user, _ := c.GetUserByEmail(u.Email); user.Email != "" {
-		return ErrUserAlreadyExists
+	if config.UniqueUsername {
+		// intentionally ignored error
+		if user, _ := c.GetUserByEmail(u.Email); user.Email != "" {
+			return ErrUserAlreadyExists
+		}
 	}
-	if err := c.Create(&u); err != nil {
+	if err := c.StoreUser(&u); err != nil {
 		return err
 	}
 	return nil
@@ -77,4 +71,18 @@ func GeneratePassword(password string) (string, error) {
 		return "", err
 	}
 	return hash, nil
+}
+
+func getConfig() (userConfig, error) {
+	var config userConfig
+
+	body, err := ioutil.ReadFile("users.config.yaml")
+	if err != nil {
+		return config, err
+	}
+
+	if err := yaml.Unmarshal(body, &config); err != nil {
+		return config, err
+	}
+	return config, nil
 }

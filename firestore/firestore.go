@@ -45,7 +45,7 @@ func (uf *Client) Close() error {
 	return nil
 }
 
-func (uf *Client) Create(u *users.User) error {
+func (uf *Client) StoreUser(u *users.User) error {
 	if err := uf.validator(u); err != nil {
 		return err
 	}

@@ -1,66 +1,67 @@
-package users_test
+package application_test
 
 import (
 	"github.com/codehell/users"
-	"github.com/codehell/users/mocked_client"
+	"github.com/codehell/users/application"
+	"github.com/codehell/users/infrastructure/repositories/inmemory"
+	"github.com/codehell/users/tests/shared"
 	"testing"
 )
 
 func TestCreateUser(t *testing.T) {
-	user := getTestingUser()
-	user.Role = "admin"
-	client, err := mocked_client.NewClient()
+	user := shared.GetTestingUser()
+	repo, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.StoreUser(&user)
+	err = repo.StoreUser(&user)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if client != nil {
-			if err := client.Close(); err != nil {
+		if repo != nil {
+			if err := repo.Close(); err != nil {
 				t.Fatal(err)
 			}
 		}
 	}()
-	storedUser, err := client.GetUserByEmail(user.Email)
+	storedUser, err := repo.GetUserByEmail(user.Email())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if storedUser.Email != user.Email {
+	if storedUser.Email() != user.Email() {
 		t.Error("The user was not the expected user")
 	}
-	if err = client.DeleteAll(); err != nil {
+	if err = repo.DeleteAll(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestStoreUser(t *testing.T) {
-	client, err := mocked_client.NewClient()
+	repo, err := inmemory.NewRepo()
 	if err != nil {
-		t.Fatal("can not create client")
+		t.Fatal("can not create repo")
 	}
 	defer func() {
-		err = client.Close()
+		err = repo.Close()
 		if err != nil {
-			t.Log("can not close client")
+			t.Log("can not close repo")
 		}
 	}()
-	user := getTestingUser()
-	if err := users.StoreUser(user, client); err != nil {
+	user := shared.GetTestingUser()
+	if err := application.StoreUser(user, repo); err != nil {
 		t.Error(err)
 	}
-	if err := users.StoreUser(user, client); err != users.ErrUserAlreadyExists {
+	if err := application.StoreUser(user, repo); err != users.ErrUserAlreadyExists {
 		t.Error(err)
 	}
-	if err = client.DeleteAll(); err != nil {
+	if err = repo.DeleteAll(); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestGetUsers(t *testing.T) {
-	client, err := mocked_client.NewClient()
+	client, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal("can not create client")
 	}
@@ -70,7 +71,7 @@ func TestGetUsers(t *testing.T) {
 			t.Fatal("can not close client")
 		}
 	}()
-	if err := createTwentyUsers(client); err != nil {
+	if err := shared.CreateTwentyUsers(client); err != nil {
 		t.Error(err)
 	}
 	myUsers, err := client.GetAll()
@@ -88,8 +89,8 @@ func TestGetUsers(t *testing.T) {
 }
 
 func TestOkPassword(t *testing.T) {
-	user := getTestingUser()
-	client, err := mocked_client.NewClient()
+	user := shared.GetTestingUser()
+	client, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,14 +107,14 @@ func TestOkPassword(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !users.CheckPassword(user, getTestingUser().Password) {
+	if !users.CheckPassword(user.Password(), "secret1") {
 		t.Error("password should match")
 	}
 }
 
 func TestWrongPassword(t *testing.T) {
-	user := getTestingUser()
-	client, err := mocked_client.NewClient()
+	user := shared.GetTestingUser()
+	client, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +123,7 @@ func TestWrongPassword(t *testing.T) {
 		t.Fatal(err)
 	}
 	badPassword := "badPassword"
-	if users.CheckPassword(user, badPassword) {
+	if users.CheckPassword(user.Password(), badPassword) {
 		t.Error("password should not match")
 	}
 }

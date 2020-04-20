@@ -10,7 +10,7 @@ import (
 
 const CollectionName = "users"
 
-type Client struct {
+type UserRepo struct {
 	projectID string
 	client    *firestore.Client
 	ctx       context.Context
@@ -26,8 +26,8 @@ type User struct {
 	UpdatedAt time.Time `firestore:"updatedAt"`
 }
 
-func NewClient(projectID string) (*Client, error) {
-	uf := new(Client)
+func NewClient(projectID string) (*UserRepo, error) {
+	uf := new(UserRepo)
 	uf.validator = users.DefaultValidator
 	uf.projectID = projectID
 	uf.ctx = context.Background()
@@ -38,14 +38,14 @@ func NewClient(projectID string) (*Client, error) {
 	return uf, nil
 }
 
-func (uf *Client) Close() error {
+func (uf *UserRepo) Close() error {
 	if err := uf.client.Close(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uf *Client) StoreUser(u *users.User) error {
+func (uf *UserRepo) StoreUser(u *users.user) error {
 	if err := uf.validator(u); err != nil {
 		return err
 	}
@@ -68,9 +68,9 @@ func (uf *Client) StoreUser(u *users.User) error {
 	return nil
 }
 
-func (uf *Client) GetUserByEmail(email string) (users.User, error) {
+func (uf *UserRepo) GetUserByEmail(email string) (users.user, error) {
 	var fireUser User
-	var user users.User
+	var user users.user
 	doc, err := uf.client.Collection(CollectionName).Doc(email).Get(uf.ctx)
 	if err != nil {
 		return user, err
@@ -82,8 +82,8 @@ func (uf *Client) GetUserByEmail(email string) (users.User, error) {
 	return user, nil
 }
 
-func (uf *Client) GetAll() ([]users.User, error) {
-	var u []users.User
+func (uf *UserRepo) GetAll() ([]users.user, error) {
+	var u []users.user
 	var fireUser User
 	iter := uf.client.Collection(CollectionName).Documents(uf.ctx)
 	for {
@@ -102,21 +102,21 @@ func (uf *Client) GetAll() ([]users.User, error) {
 	return u, nil
 }
 
-func (uf *Client) DeleteAll() error {
+func (uf *UserRepo) DeleteAll() error {
 	ref := uf.client.Collection(CollectionName)
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }
 
-func (uf *Client) Validator() users.Validator {
+func (uf *UserRepo) Validator() users.Validator {
 	return uf.validator
 }
 
-func (uf *Client) SetValidator(validator users.Validator) {
+func (uf *UserRepo) SetValidator(validator users.Validator) {
 	uf.validator = validator
 }
 
-func dataToUser(fireUser User) users.User {
-	var user users.User
+func dataToUser(fireUser User) users.user {
+	var user users.user
 	user.ID = fireUser.Email
 	user.Username = fireUser.Username
 	user.Email = fireUser.Email

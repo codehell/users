@@ -1,81 +1,73 @@
 package users
 
 import (
+	"encoding/json"
 	"errors"
-	"github.com/alexedwards/argon2id"
+	"github.com/codehell/users/valueobjects"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"time"
 )
 
-var ErrUserAlreadyExists = errors.New("users: user already exists")
+var ErrUserAlreadyExists = errors.New("users: User already exists")
 
-type userConfig struct {
+type UserConfig struct {
 	UniqueUsername bool `yaml:"unique_username"`
 }
 
 type User struct {
-	ID        interface{} `json:"id"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Role      string `json:"role"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	id        string
+	username  valueobjects.Username
+	email     string
+	password  string
+	role      string
+	createdAt time.Time
+	updatedAt time.Time
 }
 
-type Client interface {
-	Close() error
-	StoreUser(*User) error
-	DeleteAll() error
-	GetAll() ([]User, error)
-	GetUserByEmail(string) (User, error)
-	Validator() Validator
-	SetValidator(Validator)
-}
-
-type Validator func(user *User) error
-
-func StoreUser(u User, c Client) error {
-	config, err :=  getConfig()
+func NewUser(id string, username valueobjects.Username, email, password, role string) (*User, error) {
+	cryptPassword, err := GeneratePassword(password)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	validator := c.Validator()
-	if err := validator(&u); err != nil {
-		return err
-	}
-	if config.UniqueUsername {
-		// intentionally ignored error
-		if user, _ := c.GetUserByEmail(u.Email); user.Email != "" {
-			return ErrUserAlreadyExists
-		}
-	}
-	if err := c.StoreUser(&u); err != nil {
-		return err
-	}
-	return nil
+	return &User{id: id, username: username, email: email, password: cryptPassword, role: role}, nil
 }
 
-func CheckPassword(u User, password string) bool {
-	match, err := argon2id.ComparePasswordAndHash(password, u.Password)
-	if err != nil {
-		return false
-	}
-	return match
+func (u User) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u)
 }
 
-func GeneratePassword(password string) (string, error) {
-	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
-	if err != nil {
-		return "", err
-	}
-	return hash, nil
+func (u User) Id() string {
+	return u.id
 }
 
-func getConfig() (userConfig, error) {
-	var config userConfig
+func (u User) Username() valueobjects.Username {
+	return u.username
+}
 
+func (u User) Email() string {
+	return u.email
+}
+
+func (u User) Password() string {
+	return u.password
+}
+
+func (u User) Role() string {
+	return u.role
+}
+
+func (u User) CreatedAt() time.Time {
+	return u.createdAt
+}
+
+func (u User) UpdatedAt() time.Time {
+	return u.updatedAt
+}
+
+
+func GetConfig() (UserConfig, error) {
+	var config UserConfig
 	body, err := ioutil.ReadFile("users.config.yaml")
 	if err != nil {
 		return config, err

@@ -3,12 +3,12 @@ package firestore_test
 import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/codehell/users"
-	"github.com/codehell/users/firestore"
+	"github.com/codehell/users/infrastructure/repositories/firestore"
 	"testing"
 )
 
-func getTestingUser() users.User {
-	user := users.User{}
+func getTestingUser() users.user {
+	user := users.user{}
 	user.Username = "cazaplanetas"
 	user.Email = "cazaplanetas@gmail.com"
 	user.Password = "secret"
@@ -16,8 +16,8 @@ func getTestingUser() users.User {
 	return user
 }
 
-func createUser() users.User {
-	var user users.User
+func createUser() users.user {
+	var user users.user
 	user.Username = faker.Username()
 	user.Email = faker.Email()
 	user.Password = faker.Password()[:12]
@@ -25,7 +25,7 @@ func createUser() users.User {
 	return user
 }
 
-func createTwentyUsers(client firestore.Client) error {
+func createTwentyUsers(client firestore.UserRepo) error {
 	for i := 0; i < 20; i++ {
 		user := createUser()
 		err := client.StoreUser(&user)
@@ -109,7 +109,7 @@ func TestOkPassword(t *testing.T) {
 	if err != nil {
 		t.Fatal()
 	}
-	if !users.CheckPassword(user, password) {
+	if !users.CheckPassword(user.Password, password) {
 		t.Error("password should match")
 	}
 }
@@ -134,7 +134,7 @@ func TestWrongPassword(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if users.CheckPassword(user, badPassword) {
+	if users.CheckPassword(user.Password, badPassword) {
 		t.Error("password should not match")
 	}
 }

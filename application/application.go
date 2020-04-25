@@ -20,3 +20,11 @@ func StoreUser(u users.User, userRepo users.UserRepo) error {
 	}
 	return nil
 }
+
+func GetAll(userRepo users.UserRepo) ([]users.User, error) {
+	all, err := userRepo.GetAll()
+	if err != nil {
+		return all, err
+	}
+	return all, nil
+}

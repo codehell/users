@@ -25,16 +25,41 @@ type User struct {
 	updatedAt time.Time
 }
 
-func NewUser(id string, username valueobjects.Username, email, password, role string) (*User, error) {
+func NewUser(id string, username valueobjects.Username, email, password, role string) (User, error) {
 	cryptPassword, err := GeneratePassword(password)
 	if err != nil {
-		return nil, err
+		return User{}, err
 	}
-	return &User{id: id, username: username, email: email, password: cryptPassword, role: role}, nil
+	createdAt := time.Now()
+	updatedAt := time.Now()
+	return User{
+		id:        id,
+		username:  username,
+		email:     email,
+		password:  cryptPassword,
+		role:      role,
+		createdAt: createdAt,
+		updatedAt: updatedAt,
+	}, nil
 }
 
 func (u User) MarshalJSON() ([]byte, error) {
-	return json.Marshal(u)
+	user := struct {
+		ID        string    `json:"id"`
+		Username  string    `json:"username"`
+		Email     string    `json:"email"`
+		Role      string    `json:"role"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdateAt  time.Time `json:"update_at"`
+	}{
+		u.id,
+		u.username.Value(),
+		u.email,
+		u.role,
+		u.createdAt,
+		u.updatedAt,
+	}
+	return json.Marshal(user)
 }
 
 func (u User) Id() string {
@@ -64,7 +89,6 @@ func (u User) CreatedAt() time.Time {
 func (u User) UpdatedAt() time.Time {
 	return u.updatedAt
 }
-
 
 func GetConfig() (UserConfig, error) {
 	var config UserConfig

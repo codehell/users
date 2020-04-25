@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"github.com/codehell/users"
+	"github.com/codehell/users/valueobjects"
 	"google.golang.org/api/iterator"
 	"time"
 )
@@ -14,10 +15,10 @@ type UserRepo struct {
 	projectID string
 	client    *firestore.Client
 	ctx       context.Context
-	validator users.Validator
 }
 
 type User struct {
+	ID        string    `firestore:"userId"`
 	Username  string    `firestore:"username"`
 	Email     string    `firestore:"email"`
 	Password  string    `firestore:"password"`
@@ -28,7 +29,6 @@ type User struct {
 
 func NewClient(projectID string) (*UserRepo, error) {
 	uf := new(UserRepo)
-	uf.validator = users.DefaultValidator
 	uf.projectID = projectID
 	uf.ctx = context.Background()
 	var err error
@@ -45,32 +45,26 @@ func (uf *UserRepo) Close() error {
 	return nil
 }
 
-func (uf *UserRepo) StoreUser(u *users.user) error {
-	if err := uf.validator(u); err != nil {
-		return err
-	}
+func (uf *UserRepo) StoreUser(u *users.User) error {
 	var err error
-	if u.Password, err = users.GeneratePassword(u.Password); err != nil {
-		return err
-	}
 	user := User{
-		Username:  u.Username,
-		Email:     u.Email,
-		Password:  u.Password,
-		Role:      u.Role,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		Username:  u.Username().Value(),
+		Email:     u.Email(),
+		Password:  u.Password(),
+		Role:      u.Role(),
+		CreatedAt: u.CreatedAt(),
+		UpdatedAt: u.UpdatedAt(),
 	}
-	_, err = uf.client.Collection(CollectionName).Doc(u.Email).Set(uf.ctx, user)
+	_, err = uf.client.Collection(CollectionName).Doc(u.Email()).Set(uf.ctx, user)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uf *UserRepo) GetUserByEmail(email string) (users.user, error) {
+func (uf *UserRepo) GetUserByEmail(email string) (users.User, error) {
 	var fireUser User
-	var user users.user
+	var user users.User
 	doc, err := uf.client.Collection(CollectionName).Doc(email).Get(uf.ctx)
 	if err != nil {
 		return user, err
@@ -78,12 +72,13 @@ func (uf *UserRepo) GetUserByEmail(email string) (users.user, error) {
 	if err := doc.DataTo(&fireUser); err != nil {
 		return user, err
 	}
-	user = dataToUser(fireUser)
+	user, err = dataToUser(fireUser)
+
 	return user, nil
 }
 
-func (uf *UserRepo) GetAll() ([]users.user, error) {
-	var u []users.user
+func (uf *UserRepo) GetAll() ([]users.User, error) {
+	var u []users.User
 	var fireUser User
 	iter := uf.client.Collection(CollectionName).Documents(uf.ctx)
 	for {
@@ -96,7 +91,10 @@ func (uf *UserRepo) GetAll() ([]users.user, error) {
 		if err := doc.DataTo(&fireUser); err != nil {
 			return u, err
 		}
-		user := dataToUser(fireUser)
+		user, err := dataToUser(fireUser)
+		if err != nil {
+			return u, err
+		}
 		u = append(u, user)
 	}
 	return u, nil
@@ -107,24 +105,17 @@ func (uf *UserRepo) DeleteAll() error {
 	return deleteCollection(uf.ctx, uf.client, ref, 100)
 }
 
-func (uf *UserRepo) Validator() users.Validator {
-	return uf.validator
-}
+func dataToUser(fu User) (users.User, error) {
+	userName, err := valueobjects.NewUsername(fu.Username)
+	if err != nil {
+		return users.User{}, err
+	}
+	user, err := users.NewUser(fu.ID, userName, fu.Email, fu.Password, fu.Role)
+	if err != nil {
+		return users.User{}, err
+	}
 
-func (uf *UserRepo) SetValidator(validator users.Validator) {
-	uf.validator = validator
-}
-
-func dataToUser(fireUser User) users.user {
-	var user users.user
-	user.ID = fireUser.Email
-	user.Username = fireUser.Username
-	user.Email = fireUser.Email
-	user.Password = fireUser.Password
-	user.Role = fireUser.Role
-	user.CreatedAt = fireUser.CreatedAt
-	user.UpdatedAt = fireUser.UpdatedAt
-	return user
+	return user, nil
 }
 
 func deleteCollection(ctx context.Context, client *firestore.Client,

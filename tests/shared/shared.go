@@ -9,7 +9,7 @@ import (
 )
 
 func GetTestingUser() users.User {
-	username, err := valueobjects.Username{}.New("cazaplanetas")
+	username, err := valueobjects.NewUsername("cazaplanetas")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,11 +20,11 @@ func GetTestingUser() users.User {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return *user
+	return user
 }
 
 func CreateUser() users.User {
-	username, _ := valueobjects.Username{}.New(faker.Username())
+	username, _ := valueobjects.NewUsername(faker.Username())
 	email := faker.Email()
 	password := faker.Password()[:12]
 	role := "admin"
@@ -32,7 +32,7 @@ func CreateUser() users.User {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return *user
+	return user
 }
 
 func CreateTwentyUsers(client users.UserRepo) error {

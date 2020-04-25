@@ -6,16 +6,15 @@ type Username struct {
 	value string
 }
 
-func (un Username) New(name string) (Username, error) {
+func NewUsername(name string) (Username, error) {
 	validate := validator.New()
 	// Los errores de la libreria de validación pueden usarse
 	// desde el momento que añado la libreria al dominio
 	err := validate.Var(name, "min=5,max=64")
 	if err != nil {
-		return un, err
+		return Username{}, err
 	}
-	un.value = name
-	return un, nil
+	return Username{name}, nil
 }
 
 func (un Username) validate() error {
@@ -26,6 +25,6 @@ func (un Username) isEqualTo(username Username) bool {
 	return un.value == username.Value()
 }
 
-func (un Username) Value() interface{} {
+func (un Username) Value() string {
 	return un.value
 }

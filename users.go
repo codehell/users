@@ -3,7 +3,7 @@ package users
 import (
 	"encoding/json"
 	"errors"
-	"github.com/codehell/users/valueobjects"
+	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"time"
@@ -15,9 +15,10 @@ type UserConfig struct {
 	UniqueUsername bool `yaml:"unique_username"`
 }
 
+// User entity
 type User struct {
 	id        string
-	username  valueobjects.Username
+	username  Username
 	email     string
 	password  string
 	role      string
@@ -25,7 +26,7 @@ type User struct {
 	updatedAt time.Time
 }
 
-func NewUser(id string, username valueobjects.Username, email, password, role string) (User, error) {
+func NewUser(id string, username Username, email, password, role string) (User, error) {
 	cryptPassword, err := GeneratePassword(password)
 	if err != nil {
 		return User{}, err
@@ -66,7 +67,7 @@ func (u User) Id() string {
 	return u.id
 }
 
-func (u User) Username() valueobjects.Username {
+func (u User) Username() Username {
 	return u.username
 }
 
@@ -101,4 +102,46 @@ func GetConfig() (UserConfig, error) {
 		return config, err
 	}
 	return config, nil
+}
+
+// UserRepo interface for repositories
+type UserRepo interface {
+	Close() error
+	StoreUser(*User) error
+	DeleteAll() error
+	GetAll() ([]User, error)
+	GetUserByEmail(string) (User, error)
+}
+
+// UserID value object
+type UserID struct {
+	value string
+}
+
+// Username value object
+type Username struct {
+	value string
+}
+
+func NewUsername(name string) (Username, error) {
+	validate := validator.New()
+	// Los errores de la libreria de validación pueden usarse
+	// desde el momento que añado la libreria al dominio
+	err := validate.Var(name, "min=5,max=64")
+	if err != nil {
+		return Username{}, err
+	}
+	return Username{name}, nil
+}
+
+func (un Username) validate() error {
+	return nil
+}
+
+func (un Username) isEqualTo(username Username) bool {
+	return un.value == username.Value()
+}
+
+func (un Username) Value() string {
+	return un.value
 }

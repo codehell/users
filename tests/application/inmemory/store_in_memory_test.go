@@ -1,12 +1,10 @@
 package inmemory_test
 
 import (
-	"encoding/json"
 	"github.com/codehell/users"
 	"github.com/codehell/users/application"
 	"github.com/codehell/users/infrastructure/repositories/inmemory"
 	"github.com/codehell/users/tests/shared"
-	"strings"
 	"testing"
 )
 
@@ -61,15 +59,11 @@ func TestGetUsers(t *testing.T) {
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
-	defer func() {
-		if err = repo.Close(); err != nil {
-			t.Fatal("can not close repo")
-		}
-	}()
+	defer repo.Close()
 	if err := shared.CreateTwentyUsers(repo); err != nil {
 		t.Error(err)
 	}
-	myUsers, err := repo.GetAll()
+	myUsers, err := application.AllUsers(repo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,50 +77,4 @@ func TestGetUsers(t *testing.T) {
 	}
 }
 
-func TestOkPassword(t *testing.T) {
-	user := shared.GetTestingUser()
-	client, err := inmemory.NewRepo()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = client.StoreUser(&user)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		err = client.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}()
-	if err != nil {
-		t.Error(err)
-	}
-	if !users.CheckPassword(user.Password(), "secret1") {
-		t.Error("password should match")
-	}
-}
 
-func TestWrongPassword(t *testing.T) {
-	user := shared.GetTestingUser()
-	client, err := inmemory.NewRepo()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = client.StoreUser(&user)
-	if err != nil {
-		t.Fatal(err)
-	}
-	badPassword := "badPassword"
-	if users.CheckPassword(user.Password(), badPassword) {
-		t.Error("password should not match")
-	}
-}
-
-func TestMarshalUser(t *testing.T)  {
-	user := shared.GetTestingUser()
-	userJson, _ := json.Marshal(user)
-	if !strings.Contains(string(userJson), "cazaplanetas@gmail.com") {
-		t.Errorf("json: %s is incorrect", userJson)
-	}
-}

@@ -14,7 +14,7 @@ type UserConfig struct {
 
 // User entity
 type User struct {
-	id        string
+	id        UserID
 	username  Username
 	email     string
 	password  string
@@ -32,7 +32,7 @@ type userMapper struct {
 	UpdateAt  time.Time `json:"update_at"`
 }
 
-func NewUser(id string, username Username, email, password, role string) (User, error) {
+func NewUser(id UserID, username Username, email, password, role string) (User, error) {
 	cryptPassword, err := GeneratePassword(password)
 	if err != nil {
 		return User{}, err
@@ -52,7 +52,7 @@ func NewUser(id string, username Username, email, password, role string) (User, 
 
 func (u User) MarshalJSON() ([]byte, error) {
 	user := userMapper{
-		u.id,
+		u.id.Value(),
 		u.username.Value(),
 		u.email,
 		u.role,
@@ -71,7 +71,8 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	u.id = user.ID
+	userId, err := NewUserId(user.ID)
+	u.id = userId
 	u.username = username
 	u.email = user.Email
 	u.role = user.Role
@@ -81,7 +82,7 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 }
 
 func (u User) Id() string {
-	return u.id
+	return u.id.Value()
 }
 
 func (u User) Username() Username {
@@ -132,6 +133,23 @@ type UserRepo interface {
 // UserID value object
 type UserID struct {
 	value string
+}
+
+func NewUserId(userId string) (UserID, error) {
+	validate := validator.New()
+	err := validate.Var(userId, "required,uuid4")
+	if err != nil {
+		return UserID{}, err
+	}
+	return UserID{userId}, nil
+}
+
+func (uid UserID) IsEqualTo(userId UserID) bool {
+	return uid.value == userId.Value()
+}
+
+func (uid UserID) Value() string {
+	return uid.value
 }
 
 // Username value object

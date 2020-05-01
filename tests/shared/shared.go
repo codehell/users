@@ -12,10 +12,14 @@ func GetTestingUser() users.User {
 	if err != nil {
 		log.Fatal(err)
 	}
+	userId, err := users.NewUserId(uuid.New().String())
+	if err != nil {
+		log.Fatal(err)
+	}
 	email := "cazaplanetas@gmail.com"
 	password := "secret1"
 	role := "admin"
-	user, err := users.NewUser(uuid.New().String(), username, email, password, role)
+	user, err := users.NewUser(userId, username, email, password, role)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -24,10 +28,14 @@ func GetTestingUser() users.User {
 
 func CreateUser() users.User {
 	username, _ := users.NewUsername(faker.Username())
+	userId, err := users.NewUserId(uuid.New().String())
+	if err != nil {
+		log.Fatal(err)
+	}
 	email := faker.Email()
 	password := faker.Password()[:12]
 	role := "admin"
-	user, err := users.NewUser(uuid.New().String(), username, email, password, role)
+	user, err := users.NewUser(userId, username, email, password, role)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -4,8 +4,8 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"github.com/codehell/users"
-	"github.com/codehell/users/valueobjects"
 	"google.golang.org/api/iterator"
+	"log"
 	"time"
 )
 
@@ -27,7 +27,7 @@ type User struct {
 	UpdatedAt time.Time `firestore:"updatedAt"`
 }
 
-func NewClient(projectID string) (*UserRepo, error) {
+func NewRepo(projectID string) (*UserRepo, error) {
 	uf := new(UserRepo)
 	uf.projectID = projectID
 	uf.ctx = context.Background()
@@ -45,9 +45,10 @@ func (uf *UserRepo) Close() error {
 	return nil
 }
 
-func (uf *UserRepo) StoreUser(u *users.User) error {
+func (uf *UserRepo) Store(u users.User) error {
 	var err error
 	user := User{
+		ID: u.Id(),
 		Username:  u.Username().Value(),
 		Email:     u.Email(),
 		Password:  u.Password(),
@@ -55,26 +56,38 @@ func (uf *UserRepo) StoreUser(u *users.User) error {
 		CreatedAt: u.CreatedAt(),
 		UpdatedAt: u.UpdatedAt(),
 	}
-	_, err = uf.client.Collection(CollectionName).Doc(u.Email()).Set(uf.ctx, user)
+	_, err = uf.client.Collection(CollectionName).Doc(u.Id()).Set(uf.ctx, user)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uf *UserRepo) GetUserByEmail(email string) (users.User, error) {
+func (uf *UserRepo) Find(id string) (users.User, error) {
 	var fireUser User
 	var user users.User
-	doc, err := uf.client.Collection(CollectionName).Doc(email).Get(uf.ctx)
+	doc, err := uf.client.Collection(CollectionName).Doc(id).Get(uf.ctx)
 	if err != nil {
+		log.Println(err)
 		return user, err
 	}
 	if err := doc.DataTo(&fireUser); err != nil {
 		return user, err
 	}
-	user, err = dataToUser(fireUser)
+	return dataToUser(fireUser)
+}
 
-	return user, nil
+func (uf *UserRepo) FindField(value string, field string) (users.User, error) {
+	iter := uf.client.Collection(CollectionName).Where(field, "==", value).Documents(uf.ctx)
+	doc, err := iter.Next()
+	if err != nil {
+		return users.User{}, err
+	}
+	fireUser := new(User)
+	if err := doc.DataTo(fireUser); err != nil {
+		return users.User{}, err
+	}
+	return dataToUser(*fireUser)
 }
 
 func (uf *UserRepo) GetAll() ([]users.User, error) {
@@ -106,7 +119,7 @@ func (uf *UserRepo) DeleteAll() error {
 }
 
 func dataToUser(fu User) (users.User, error) {
-	userName, err := valueobjects.NewUsername(fu.Username)
+	userName, err := users.NewUsername(fu.Username)
 	if err != nil {
 		return users.User{}, err
 	}

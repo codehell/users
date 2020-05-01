@@ -2,14 +2,11 @@ package users
 
 import (
 	"encoding/json"
-	"errors"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"time"
 )
-
-var ErrUserAlreadyExists = errors.New("users: User already exists")
 
 type UserConfig struct {
 	UniqueUsername bool `yaml:"unique_username"`
@@ -24,6 +21,15 @@ type User struct {
 	role      string
 	createdAt time.Time
 	updatedAt time.Time
+}
+
+type userMapper struct {
+	ID        string    `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdateAt  time.Time `json:"update_at"`
 }
 
 func NewUser(id string, username Username, email, password, role string) (User, error) {
@@ -45,14 +51,7 @@ func NewUser(id string, username Username, email, password, role string) (User, 
 }
 
 func (u User) MarshalJSON() ([]byte, error) {
-	user := struct {
-		ID        string    `json:"id"`
-		Username  string    `json:"username"`
-		Email     string    `json:"email"`
-		Role      string    `json:"role"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdateAt  time.Time `json:"update_at"`
-	}{
+	user := userMapper{
 		u.id,
 		u.username.Value(),
 		u.email,
@@ -61,6 +60,24 @@ func (u User) MarshalJSON() ([]byte, error) {
 		u.updatedAt,
 	}
 	return json.Marshal(user)
+}
+
+func (u *User) UnmarshalJSON(bytes []byte) error {
+	user := userMapper{}
+	if err := json.Unmarshal(bytes, &user); err != nil {
+		return err
+	}
+	username, err := NewUsername(user.Username)
+	if err != nil {
+		return err
+	}
+	u.id = user.ID
+	u.username = username
+	u.email = user.Email
+	u.role = user.Role
+	u.createdAt = user.CreatedAt
+	u.updatedAt = user.UpdateAt
+	return nil
 }
 
 func (u User) Id() string {
@@ -106,11 +123,10 @@ func GetConfig() (UserConfig, error) {
 
 // UserRepo interface for repositories
 type UserRepo interface {
-	Close() error
-	StoreUser(*User) error
-	DeleteAll() error
+	Store(u User) error
+	Find(id string) (User, error)
+	FindField(value string, field string) (User, error)
 	GetAll() ([]User, error)
-	GetUserByEmail(string) (User, error)
 }
 
 // UserID value object
@@ -134,11 +150,7 @@ func NewUsername(name string) (Username, error) {
 	return Username{name}, nil
 }
 
-func (un Username) validate() error {
-	return nil
-}
-
-func (un Username) isEqualTo(username Username) bool {
+func (un Username) IsEqualTo(username Username) bool {
 	return un.value == username.Value()
 }
 

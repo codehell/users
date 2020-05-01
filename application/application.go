@@ -5,17 +5,7 @@ import (
 )
 
 func StoreUser(u users.User, userRepo users.UserRepo) error {
-	config, err :=  users.GetConfig()
-	if err != nil {
-		return err
-	}
-	if config.UniqueUsername {
-		// intentionally ignored error
-		if user, _ := userRepo.GetUserByEmail(u.Email()); user.Email() != "" {
-			return users.ErrUserAlreadyExists
-		}
-	}
-	if err := userRepo.StoreUser(&u); err != nil {
+	if err := userRepo.Store(u); err != nil {
 		return err
 	}
 	return nil
@@ -27,4 +17,12 @@ func AllUsers(userRepo users.UserRepo) ([]users.User, error) {
 		return all, err
 	}
 	return all, nil
+}
+
+func Find(userRepo users.UserRepo, id string) (users.User, error) {
+	return userRepo.Find(id)
+}
+
+func FindField(userRepo users.UserRepo, value string, field string) (users.User, error) {
+	return userRepo.FindField(value, field)
 }

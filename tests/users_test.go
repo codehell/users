@@ -40,14 +40,13 @@ func TestUnmarshalUser(t *testing.T) {
 	user := shared.GetTestingUser()
 	userJson, err := json.Marshal(user)
 	if err != nil {
-		t.Error("can not marshal user struct")
+		t.Fatal(err)
 	}
-
-	err = json.Unmarshal(userJson, &user)
-	if err != nil {
-		t.Error("can not unmarshal json")
+	userStruct := users.User{}
+	err = json.Unmarshal(userJson, &userStruct); if err != nil {
+		t.Fatal(err)
 	}
-	if user.Email() != "cazaplanetas@gmail.com" {
-		t.Errorf("expected user email: %s, got: %s", "cazaplanetas@gmail.com", user.Email())
+	if userStruct.Email() != "cazaplanetas@gmail.com" {
+		t.Errorf("expect user struct with email cazaplanetas@gmail.com, got: %v", userStruct)
 	}
 }

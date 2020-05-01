@@ -1,21 +1,21 @@
-package firestore_test
+package inmemory_test
 
 import (
 	"github.com/codehell/users/application"
-	"github.com/codehell/users/infrastructure/repositories/firestore"
+	"github.com/codehell/users/infrastructure/repositories/inmemory"
 	"github.com/codehell/users/tests/shared"
 	"testing"
 )
 
 func TestStoreUser(t *testing.T) {
-	repo, err := firestore.NewRepo("codehell-users")
+	repo, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
 	if err := application.StoreUser(user, repo); err != nil {
-		t.Errorf("can not store user: %v", err)
+		t.Fatal(err)
 	}
 	if err = repo.DeleteAll(); err != nil {
 		t.Fatal(err)
@@ -23,13 +23,13 @@ func TestStoreUser(t *testing.T) {
 }
 
 func TestAllUsers(t *testing.T) {
-	repo, err := firestore.NewRepo("codehell-users")
+	repo, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
 	if err := shared.CreateTwentyUsers(repo); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	myUsers, err := application.AllUsers(repo)
 	if err != nil {
@@ -46,14 +46,14 @@ func TestAllUsers(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	repo, err := firestore.NewRepo("codehell-users")
+	repo, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
 	if err := application.StoreUser(user, repo); err != nil {
-		t.Errorf("can not store user: %v", err)
+		t.Fatal(err)
 	}
 
 	user, err = application.Find(repo, user.Id())
@@ -62,16 +62,12 @@ func TestFind(t *testing.T) {
 	}
 
 	if user.Email() != "cazaplanetas@gmail.com" {
-		t.Errorf("user is not the expected user: %v", user)
-	}
-
-	if err = repo.DeleteAll(); err != nil {
-		t.Fatal(err)
+		t.Error("user is not the expected")
 	}
 }
 
 func TestFindField(t *testing.T) {
-	repo, err := firestore.NewRepo("codehell-users")
+	repo, err := inmemory.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}

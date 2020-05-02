@@ -77,7 +77,7 @@ func (uf *UserRepo) Find(id string) (users.User, error) {
 	return dataToUser(fireUser)
 }
 
-func (uf *UserRepo) FindField(value string, field string) (users.User, error) {
+func (uf *UserRepo) FindByField(value string, field string) (users.User, error) {
 	iter := uf.client.Collection(CollectionName).Where(field, "==", value).Documents(uf.ctx)
 	doc, err := iter.Next()
 	if err != nil {
@@ -123,7 +123,11 @@ func dataToUser(fu User) (users.User, error) {
 	if err != nil {
 		return users.User{}, err
 	}
-	user, err := users.NewUser(fu.ID, userName, fu.Email, fu.Password, fu.Role)
+	userId, err := users.NewUserId(fu.ID)
+	if err != nil {
+		return users.User{}, err
+	}
+	user, err := users.NewUser(userId, userName, fu.Email, fu.Password, fu.Role)
 	if err != nil {
 		return users.User{}, err
 	}

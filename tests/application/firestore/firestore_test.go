@@ -58,7 +58,7 @@ func TestFind(t *testing.T) {
 
 	user, err = application.Find(repo, user.Id())
 	if err != nil {
-		t.Fatal("can not find user")
+		t.Fatalf("can not find user: %v", err)
 	}
 
 	if user.Email() != "cazaplanetas@gmail.com" {
@@ -70,7 +70,7 @@ func TestFind(t *testing.T) {
 	}
 }
 
-func TestFindField(t *testing.T) {
+func TestFindByField(t *testing.T) {
 	repo, err := firestore.NewRepo("codehell-users")
 	if err != nil {
 		t.Fatal("can not create repo")
@@ -81,7 +81,7 @@ func TestFindField(t *testing.T) {
 		t.Errorf("can not store user: %v", err)
 	}
 
-	user, err = application.FindField(repo, user.Email(), "email")
+	user, err = application.FindByField(repo, user.Email(), "email")
 	if err != nil {
 		t.Fatal("can not find user")
 	}

@@ -32,7 +32,7 @@ func (fuc *UserRepo) Find(id string) (users.User, error) {
 	return users.User{}, errors.New("user not found")
 }
 
-func (fuc *UserRepo) FindField(value string, field string) (users.User, error) {
+func (fuc *UserRepo) FindByField(value string, field string) (users.User, error) {
 	if field != "username" && field != "email" {
 		return users.User{}, errors.New("bad field")
 	}

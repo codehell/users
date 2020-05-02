@@ -20,9 +20,28 @@ func AllUsers(userRepo users.UserRepo) ([]users.User, error) {
 }
 
 func Find(userRepo users.UserRepo, id string) (users.User, error) {
-	return userRepo.Find(id)
+	user, err := userRepo.Find(id)
+	if err != nil {
+		return user, users.UserNotExistError
+	}
+	return user, nil
 }
 
-func FindField(userRepo users.UserRepo, value string, field string) (users.User, error) {
-	return userRepo.FindField(value, field)
+func FindByField(userRepo users.UserRepo, value string, field string) (users.User, error) {
+	user, err := userRepo.FindByField(value, field)
+	if err != nil {
+		return user, users.UserNotExistError
+	}
+	return user, nil
+}
+
+func SignIn(userRepo users.UserRepo, email string, password string) (users.User, error) {
+	user, err := userRepo.FindByField(email, "email")
+	if err != nil {
+		return users.User{}, users.EmailNotExistError
+	}
+	if users.CheckPassword(user.Password(), password) {
+		return user, nil
+	}
+	return users.User{}, users.PassWordNotMatchError
 }

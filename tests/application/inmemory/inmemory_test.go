@@ -77,7 +77,7 @@ func TestFindField(t *testing.T) {
 		t.Errorf("can not store user: %v", err)
 	}
 
-	user, err = application.FindField(repo, user.Email(), "email")
+	user, err = application.FindByField(repo, user.Email(), "email")
 	if err != nil {
 		t.Fatal("can not find user")
 	}
@@ -88,5 +88,21 @@ func TestFindField(t *testing.T) {
 
 	if err = repo.DeleteAll(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestSignIn(t *testing.T) {
+	repo, err := inmemory.NewRepo()
+	if err != nil {
+		t.Fatal("can not create repo")
+	}
+	defer repo.Close()
+	user := shared.GetTestingUser()
+	if err := application.StoreUser(user, repo); err != nil {
+		t.Errorf("can not store user: %v", err)
+	}
+	_, err = application.SignIn(repo, "cazaplanetas@gmail.com", "secret1")
+	if err != nil {
+		t.Error(err)
 	}
 }

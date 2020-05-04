@@ -42,8 +42,8 @@ func CreateUser() users.User {
 	return user
 }
 
-func CreateTwentyUsers(client users.UserRepo) error {
-	for i := 0; i < 20; i++ {
+func CreateTenUsers(client users.UserRepo) error {
+	for i := 0; i < 10; i++ {
 		user := CreateUser()
 		err := client.Store(user)
 		if err != nil {

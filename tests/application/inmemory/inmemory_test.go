@@ -1,6 +1,8 @@
 package inmemory_test
 
 import (
+	"errors"
+	"github.com/codehell/users"
 	"github.com/codehell/users/application"
 	"github.com/codehell/users/infrastructure/repositories/inmemory"
 	"github.com/codehell/users/tests/shared"
@@ -14,8 +16,27 @@ func TestStoreUser(t *testing.T) {
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
-	if err := application.StoreUser(user, repo); err != nil {
+	if err := application.StoreUser(repo, user); err != nil {
 		t.Fatal(err)
+	}
+	if err = repo.DeleteAll(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestUserAlreadyError(t *testing.T) {
+	repo, err := inmemory.NewRepo()
+	if err != nil {
+		t.Fatal("can not create repo")
+	}
+	defer repo.Close()
+	user := shared.GetTestingUser()
+	if err := application.StoreUser(repo, user); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := application.StoreUser(repo, user); !errors.Is(users.UserAlreadyExistsError, err) {
+		t.Errorf("expected error %s", users.UserAlreadyExistsError)
 	}
 	if err = repo.DeleteAll(); err != nil {
 		t.Fatal(err)
@@ -28,7 +49,7 @@ func TestAllUsers(t *testing.T) {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	if err := shared.CreateTwentyUsers(repo); err != nil {
+	if err := shared.CreateTenUsers(repo); err != nil {
 		t.Fatal(err)
 	}
 	myUsers, err := application.AllUsers(repo)
@@ -52,7 +73,7 @@ func TestFind(t *testing.T) {
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
-	if err := application.StoreUser(user, repo); err != nil {
+	if err := application.StoreUser(repo,user); err != nil {
 		t.Fatal(err)
 	}
 
@@ -73,7 +94,7 @@ func TestFindField(t *testing.T) {
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
-	if err := application.StoreUser(user, repo); err != nil {
+	if err := application.StoreUser(repo, user); err != nil {
 		t.Errorf("can not store user: %v", err)
 	}
 
@@ -98,7 +119,7 @@ func TestSignIn(t *testing.T) {
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
-	if err := application.StoreUser(user, repo); err != nil {
+	if err := application.StoreUser(repo, user); err != nil {
 		t.Errorf("can not store user: %v", err)
 	}
 	_, err = application.SignIn(repo, "cazaplanetas@gmail.com", "secret1")

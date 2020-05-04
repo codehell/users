@@ -1,6 +1,8 @@
 package firestore_test
 
 import (
+	"errors"
+	"github.com/codehell/users"
 	"github.com/codehell/users/application"
 	"github.com/codehell/users/infrastructure/repositories/firestore"
 	"github.com/codehell/users/tests/shared"
@@ -14,8 +16,31 @@ func TestStoreUser(t *testing.T) {
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
-	if err := application.StoreUser(user, repo); err != nil {
+	if err := application.StoreUser(repo, user); err != nil {
 		t.Errorf("can not store user: %v", err)
+	}
+	if err = repo.DeleteAll(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestUserAlreadyError(t *testing.T) {
+	repo, err := firestore.NewRepo("codehell-users")
+	if err != nil {
+		t.Fatal("can not create repo")
+	}
+	defer func () {
+		if err := repo.Close(); err != nil {
+			t.Log(err)
+		}
+	}()
+	user := shared.GetTestingUser()
+	if err := application.StoreUser(repo, user); err != nil {
+		t.Fatalf("can not store user: %v", err)
+	}
+	err = application.StoreUser(repo, user)
+	if !errors.Is(users.UserAlreadyExistsError, err) {
+		t.Errorf("expected error %v, got %v", users.UserAlreadyExistsError, err)
 	}
 	if err = repo.DeleteAll(); err != nil {
 		t.Fatal(err)
@@ -28,7 +53,7 @@ func TestAllUsers(t *testing.T) {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	if err := shared.CreateTwentyUsers(repo); err != nil {
+	if err := shared.CreateTenUsers(repo); err != nil {
 		t.Error(err)
 	}
 	myUsers, err := application.AllUsers(repo)
@@ -36,7 +61,7 @@ func TestAllUsers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(myUsers) != 20 {
+	if len(myUsers) != 10 {
 		t.Errorf("got %d users, expect %d users", len(myUsers), 20)
 	}
 
@@ -52,7 +77,7 @@ func TestFind(t *testing.T) {
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
-	if err := application.StoreUser(user, repo); err != nil {
+	if err := application.StoreUser(repo, user); err != nil {
 		t.Errorf("can not store user: %v", err)
 	}
 
@@ -77,7 +102,7 @@ func TestFindByField(t *testing.T) {
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
-	if err := application.StoreUser(user, repo); err != nil {
+	if err := application.StoreUser(repo, user); err != nil {
 		t.Errorf("can not store user: %v", err)
 	}
 

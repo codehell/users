@@ -80,8 +80,8 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func (u User) Id() string {
-	return u.id.Value()
+func (u User) Id() UserID {
+	return u.id
 }
 
 func (u User) Username() Username {

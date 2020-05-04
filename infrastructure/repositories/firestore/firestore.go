@@ -3,9 +3,9 @@ package firestore
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"errors"
 	"github.com/codehell/users"
 	"google.golang.org/api/iterator"
-	"log"
 	"time"
 )
 
@@ -46,9 +46,14 @@ func (uf *UserRepo) Close() error {
 }
 
 func (uf *UserRepo) Store(u users.User) error {
-	var err error
+	userExist, err := uf.userExist(u)
+	if userExist {
+		return users.UserAlreadyExistsError
+	} else if err != nil {
+		return err
+	}
 	user := User{
-		ID: u.Id(),
+		ID: u.Id().Value(),
 		Username:  u.Username().Value(),
 		Email:     u.Email(),
 		Password:  u.Password(),
@@ -56,9 +61,9 @@ func (uf *UserRepo) Store(u users.User) error {
 		CreatedAt: u.CreatedAt(),
 		UpdatedAt: u.UpdatedAt(),
 	}
-	_, err = uf.client.Collection(CollectionName).Doc(u.Id()).Set(uf.ctx, user)
+	_, err = uf.client.Collection(CollectionName).Doc(u.Id().Value()).Set(uf.ctx, user)
 	if err != nil {
-		return err
+		return users.UserSystemError.Wrap(err)
 	}
 	return nil
 }
@@ -68,11 +73,10 @@ func (uf *UserRepo) Find(id string) (users.User, error) {
 	var user users.User
 	doc, err := uf.client.Collection(CollectionName).Doc(id).Get(uf.ctx)
 	if err != nil {
-		log.Println(err)
-		return user, err
+		return user, users.UserSystemError.Wrap(err)
 	}
 	if err := doc.DataTo(&fireUser); err != nil {
-		return user, err
+		return user, users.UserSystemError.Wrap(err)
 	}
 	return dataToUser(fireUser)
 }
@@ -80,14 +84,17 @@ func (uf *UserRepo) Find(id string) (users.User, error) {
 func (uf *UserRepo) FindByField(value string, field string) (users.User, error) {
 	iter := uf.client.Collection(CollectionName).Where(field, "==", value).Documents(uf.ctx)
 	doc, err := iter.Next()
+	if errors.Is(err, iterator.Done) {
+		return users.User{}, users.UserNotFoundError
+	}
 	if err != nil {
-		return users.User{}, err
+		return users.User{}, users.UserSystemError.Wrap(err)
 	}
-	fireUser := new(User)
-	if err := doc.DataTo(fireUser); err != nil {
-		return users.User{}, err
+	fireUser := User{}
+	if err := doc.DataTo(&fireUser); err != nil {
+		return users.User{}, users.UserSystemError.Wrap(err)
 	}
-	return dataToUser(*fireUser)
+	return dataToUser(fireUser)
 }
 
 func (uf *UserRepo) GetAll() ([]users.User, error) {
@@ -106,7 +113,7 @@ func (uf *UserRepo) GetAll() ([]users.User, error) {
 		}
 		user, err := dataToUser(fireUser)
 		if err != nil {
-			return u, err
+			return u, users.UserSystemError.Wrap(err)
 		}
 		u = append(u, user)
 	}
@@ -121,23 +128,36 @@ func (uf *UserRepo) DeleteAll() error {
 func dataToUser(fu User) (users.User, error) {
 	userName, err := users.NewUsername(fu.Username)
 	if err != nil {
-		return users.User{}, err
+		return users.User{}, users.UserSystemError.Wrap(err)
 	}
 	userId, err := users.NewUserId(fu.ID)
 	if err != nil {
-		return users.User{}, err
+		return users.User{}, users.UserSystemError.Wrap(err)
 	}
 	user, err := users.NewUser(userId, userName, fu.Email, fu.Password, fu.Role)
 	if err != nil {
-		return users.User{}, err
+		return users.User{}, users.UserSystemError.Wrap(err)
 	}
 
 	return user, nil
 }
 
-func deleteCollection(ctx context.Context, client *firestore.Client,
-	ref *firestore.CollectionRef, batchSize int) error {
+func (uf *UserRepo) userExist(u users.User) (bool, error) {
+	_, err := uf.FindByField(u.Email(), "email")
+	if errors.Is(err, users.UserNotFoundError) {
+		return false, nil
+	}
+	_, err = uf.FindByField(u.Username().Value(), "username")
+	if errors.Is(err, users.UserNotFoundError) {
+		return false, nil
+	}
+	if err != nil {
+		return false, users.UserSystemError.Wrap(err)
+	}
+	return true, nil
+}
 
+func deleteCollection(ctx context.Context, client *firestore.Client, ref *firestore.CollectionRef, batchSize int) error {
 	for {
 		// Get a batch of documents
 		iter := ref.Limit(batchSize).Documents(ctx)

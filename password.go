@@ -1,6 +1,8 @@
 package users
 
-import "github.com/alexedwards/argon2id"
+import (
+	"github.com/alexedwards/argon2id"
+)
 
 func CheckPassword(hash string, password string) bool {
 	match, err := argon2id.ComparePasswordAndHash(password, hash)

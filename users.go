@@ -28,7 +28,7 @@ type userMapper struct {
 	Email     string    `json:"email"`
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdateAt  time.Time `json:"update_at"`
+	UpdatedAt time.Time `json:"update_at"`
 }
 
 func NewUser(id UserID, username Username, email, password, role string) (User, error) {
@@ -51,12 +51,12 @@ func NewUser(id UserID, username Username, email, password, role string) (User, 
 
 func (u User) MarshalJSON() ([]byte, error) {
 	user := userMapper{
-		u.id.Value(),
-		u.username.Value(),
-		u.email,
-		u.role,
-		u.createdAt,
-		u.updatedAt,
+		ID:        u.id.Value(),
+		Username:  u.username.Value(),
+		Email:     u.email,
+		Role:      u.role,
+		CreatedAt: u.createdAt,
+		UpdatedAt: u.updatedAt,
 	}
 	return json.Marshal(user)
 }
@@ -76,7 +76,7 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	u.email = user.Email
 	u.role = user.Role
 	u.createdAt = user.CreatedAt
-	u.updatedAt = user.UpdateAt
+	u.updatedAt = user.UpdatedAt
 	return nil
 }
 
@@ -108,7 +108,7 @@ func (u User) UpdatedAt() time.Time {
 	return u.updatedAt
 }
 
-func GetConfig() (UserConfig, error) {
+func Config() (UserConfig, error) {
 	var config UserConfig
 	body, err := ioutil.ReadFile("users.config.yaml")
 	if err != nil {
@@ -126,5 +126,5 @@ type UserRepo interface {
 	Store(u User) error
 	Find(id string) (User, error)
 	FindByField(value string, field string) (User, error)
-	GetAll() ([]User, error)
+	All() ([]User, error)
 }

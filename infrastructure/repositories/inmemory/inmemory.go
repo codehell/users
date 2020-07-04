@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"errors"
+	"fmt"
 	"github.com/codehell/users"
 )
 
@@ -23,10 +24,6 @@ func (fuc *UserRepo) Store(u users.User) error {
 	if err == nil {
 		return users.UserAlreadyExistsError
 	}
-	_, err = fuc.FindByField(u.Username().Value(), "username")
-	if err == nil {
-		return users.UserAlreadyExistsError
-	}
 	fuc.CreatedUsers = append(fuc.CreatedUsers, u)
 	return nil
 }
@@ -37,12 +34,12 @@ func (fuc *UserRepo) Find(id string) (users.User, error) {
 			return u, nil
 		}
 	}
-	return users.User{}, users.UserNotFoundError
+	return users.User{}, fmt.Errorf("user with id: %s does not exist", id)
 }
 
 func (fuc *UserRepo) FindByField(value string, field string) (users.User, error) {
 	if field != "username" && field != "email" {
-		return users.User{}, errors.New("bad field")
+		return users.User{}, errors.New("wrong field to find")
 	}
 	for _, u := range fuc.CreatedUsers {
 		userMap := map[string]string{"username": u.Username().Value(), "email": u.Email()}
@@ -50,10 +47,10 @@ func (fuc *UserRepo) FindByField(value string, field string) (users.User, error)
 			return u, nil
 		}
 	}
-	return users.User{}, users.UserNotFoundError
+	return users.User{}, errors.New("can not found user by field")
 }
 
-func (fuc *UserRepo) GetAll() ([]users.User, error) {
+func (fuc *UserRepo) All() ([]users.User, error) {
 	return fuc.CreatedUsers, nil
 }
 

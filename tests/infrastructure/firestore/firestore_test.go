@@ -12,7 +12,7 @@ import (
 func TestStoreUser(t *testing.T) {
 	repo, err := firestore.NewRepo("codehell-users")
 	if err != nil {
-		t.Fatal("can not create repo")
+		t.Fatalf("can not create repo: %v", err)
 	}
 	defer repo.Close()
 	user := shared.GetTestingUser()
@@ -31,7 +31,7 @@ func TestUserAlreadyError(t *testing.T) {
 	}
 	defer func () {
 		if err := repo.Close(); err != nil {
-			t.Log(err)
+			t.Fatal(err)
 		}
 	}()
 	user := shared.GetTestingUser()

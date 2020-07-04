@@ -57,7 +57,7 @@ func TestAllUsers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(myUsers) != 20 {
+	if len(myUsers) != 10 {
 		t.Errorf("got %d users, expect %d users", len(myUsers), 20)
 	}
 

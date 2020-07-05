@@ -118,15 +118,15 @@ func (uf *UserRepo) DeleteAll() error {
 func dataToUser(fu User) (users.User, error) {
 	userName, err := users.NewUsername(fu.Username)
 	if err != nil {
-		return users.User{}, users.UserSystemError
+		return users.User{}, err
 	}
 	userId, err := users.NewUserId(fu.ID)
 	if err != nil {
-		return users.User{}, users.UserSystemError
+		return users.User{}, err
 	}
 	user, err := users.NewUser(userId, userName, fu.Email, fu.Password, fu.Role)
 	if err != nil {
-		return users.User{}, users.UserSystemError
+		return users.User{}, err
 	}
 
 	return user, nil

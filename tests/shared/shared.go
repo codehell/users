@@ -28,10 +28,7 @@ func GetTestingUser() users.User {
 
 func CreateUser() users.User {
 	username, _ := users.NewUsername(faker.Username())
-	userId, err := users.NewUserId(uuid.New().String())
-	if err != nil {
-		log.Fatal(err)
-	}
+	userId, _ := users.NewUserId(uuid.New().String())
 	email := faker.Email()
 	password := faker.Password()[:12]
 	role := "admin"

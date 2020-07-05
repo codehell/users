@@ -22,7 +22,7 @@ func (*UserRepo) Close() error {
 func (fuc *UserRepo) Store(u users.User) error {
 	_, err := fuc.FindByField(u.Email(), "email")
 	if err == nil {
-		return users.UserAlreadyExistsError
+		return &users.UserAlreadyExistsError
 	}
 	fuc.CreatedUsers = append(fuc.CreatedUsers, u)
 	return nil
@@ -47,7 +47,7 @@ func (fuc *UserRepo) FindByField(value string, field string) (users.User, error)
 			return u, nil
 		}
 	}
-	return users.User{}, errors.New("can not found user by field")
+	return users.User{}, fmt.Errorf("can not found user by field %s and %s value", field, value)
 }
 
 func (fuc *UserRepo) All() ([]users.User, error) {

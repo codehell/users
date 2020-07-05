@@ -127,4 +127,5 @@ type UserRepo interface {
 	Find(id string) (User, error)
 	FindByField(value string, field string) (User, error)
 	All() ([]User, error)
+	Close() error
 }

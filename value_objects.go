@@ -11,7 +11,7 @@ func NewUserId(userId string) (UserID, error) {
 	validate := validator.New()
 	err := validate.Var(userId, "required,uuid4")
 	if err != nil {
-		return UserID{}, UserValidationError
+		return UserID{}, &UserValidationError
 	}
 	return UserID{userId}, nil
 }
@@ -33,7 +33,7 @@ func NewUsername(name string) (Username, error) {
 	validate := validator.New()
 	err := validate.Var(name, "min=5,max=64")
 	if err != nil {
-		return Username{}, UserValidationError
+		return Username{}, &UserValidationError
 	}
 	return Username{name}, nil
 }

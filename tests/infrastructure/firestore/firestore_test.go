@@ -39,7 +39,7 @@ func TestUserAlreadyError(t *testing.T) {
 		t.Fatalf("can not store user: %v", err)
 	}
 	err = application.StoreUser(repo, user)
-	if !errors.Is(users.UserAlreadyExistsError, err) {
+	if !errors.Is(&users.UserAlreadyExistsError, err) {
 		t.Errorf("expected error %v, got %v", users.UserAlreadyExistsError, err)
 	}
 	if err = repo.DeleteAll(); err != nil {

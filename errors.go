@@ -6,32 +6,23 @@ import (
 )
 
 var (
-	UserPasswordNotMatchError = Error{code: "userPasswordNotMatch", err: errors.New("user password not match")}
-	UserNotFoundError         = Error{code: "userNotFound", err: errors.New("user not found")}
-	UserAlreadyExistsError    = Error{code: "userAlreadyExist", err: errors.New("user already exist")}
-	UserSystemError           = Error{code: "userSystemError", err: errors.New("user system error")}
-	UserValidationError       = Error{code: "userValidationError", err: errors.New("user validation error")}
+	UserPasswordNotMatchError = Error{Code: "userPasswordNotMatch", Err: errors.New("user password not match")}
+	UserNotFoundError         = Error{Code: "userNotFound", Err: errors.New("user not found")}
+	UserAlreadyExistsError    = Error{Code: "userAlreadyExist", Err: errors.New("user already exist")}
+	UserSystemError           = Error{Code: "userSystemError", Err: errors.New("user system error")}
+	UserValidationError       = Error{Code: "userValidationError", Err: errors.New("user validation error")}
 )
 
-type DomainError interface {
-	Error() string
-	Code() string
-	Unwrap() error
-}
 
 type Error struct {
-	code string
-	err  error
+	Code string
+	Err  error
 }
 
-func (e Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.code, e.err.Error())
+func (e *Error) Error() string {
+	return fmt.Sprintf("%s: %v", e.Code, e.Err)
 }
 
-func (e Error) Unwrap() error {
-	return e.err
-}
-
-func (e Error) Code() string {
-	return e.code
+func (e *Error) Unwrap() error {
+	return e.Err
 }

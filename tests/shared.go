@@ -1,4 +1,4 @@
-package shared
+package tests
 
 import (
 	"github.com/bxcodec/faker/v3"

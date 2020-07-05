@@ -13,7 +13,6 @@ var (
 	UserValidationError       = Error{Code: "userValidationError", Err: errors.New("user validation error")}
 )
 
-
 type Error struct {
 	Code string
 	Err  error

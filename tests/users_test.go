@@ -3,13 +3,12 @@ package tests
 import (
 	"encoding/json"
 	"github.com/codehell/users"
-	"github.com/codehell/users/tests/shared"
 	"strings"
 	"testing"
 )
 
 func TestOkPassword(t *testing.T) {
-	user := shared.GetTestingUser()
+	user := GetTestingUser()
 
 	if !users.CheckPassword(user.Password(), "secret1") {
 		t.Error("password should match")
@@ -17,7 +16,7 @@ func TestOkPassword(t *testing.T) {
 }
 
 func TestWrongPassword(t *testing.T) {
-	user := shared.GetTestingUser()
+	user := GetTestingUser()
 
 	badPassword := "badPassword"
 	if users.CheckPassword(user.Password(), badPassword) {
@@ -26,7 +25,7 @@ func TestWrongPassword(t *testing.T) {
 }
 
 func TestMarshalUser(t *testing.T)  {
-	user := shared.GetTestingUser()
+	user := GetTestingUser()
 	userJson, err := json.Marshal(user)
 	if err != nil {
 		t.Error("can not marshal user struct")
@@ -37,7 +36,7 @@ func TestMarshalUser(t *testing.T)  {
 }
 
 func TestUnmarshalUser(t *testing.T) {
-	user := shared.GetTestingUser()
+	user := GetTestingUser()
 	userJson, err := json.Marshal(user)
 	if err != nil {
 		t.Fatal(err)

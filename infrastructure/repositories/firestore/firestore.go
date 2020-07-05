@@ -37,34 +37,34 @@ func NewRepo(projectID string) (*UserRepo, error) {
 	return uf, nil
 }
 
-func (uf *UserRepo) Close() error {
-	if err := uf.client.Close(); err != nil {
+func (r *UserRepo) Close() error {
+	if err := r.client.Close(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uf *UserRepo) Store(u users.User) error {
-	user := User{
-		ID: u.Id().Value(),
-		Username:  u.Username().Value(),
-		Email:     u.Email(),
-		Password:  u.Password(),
-		Role:      u.Role(),
-		CreatedAt: u.CreatedAt(),
-		UpdatedAt: u.UpdatedAt(),
+func (r *UserRepo) Store(user users.User) error {
+	localUser := User{
+		ID:        user.Id().Value(),
+		Username:  user.Username().Value(),
+		Email:     user.Email(),
+		Password:  user.Password(),
+		Role:      user.Role(),
+		CreatedAt: user.CreatedAt(),
+		UpdatedAt: user.UpdatedAt(),
 	}
-	_, err := uf.client.Collection(CollectionName).Doc(u.Id().Value()).Set(uf.ctx, user)
+	_, err := r.client.Collection(CollectionName).Doc(user.Id().Value()).Set(r.ctx, localUser)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uf *UserRepo) Find(id string) (users.User, error) {
+func (r *UserRepo) Find(id string) (users.User, error) {
 	var fireUser User
 	var user users.User
-	doc, err := uf.client.Collection(CollectionName).Doc(id).Get(uf.ctx)
+	doc, err := r.client.Collection(CollectionName).Doc(id).Get(r.ctx)
 	if err != nil {
 		return user, err
 	}
@@ -74,8 +74,8 @@ func (uf *UserRepo) Find(id string) (users.User, error) {
 	return dataToUser(fireUser)
 }
 
-func (uf *UserRepo) FindByField(value string, field string) (users.User, error) {
-	iter := uf.client.Collection(CollectionName).Where(field, "==", value).Documents(uf.ctx)
+func (r *UserRepo) FindByField(value string, field string) (users.User, error) {
+	iter := r.client.Collection(CollectionName).Where(field, "==", value).Documents(r.ctx)
 	doc, err := iter.Next()
 	if err != nil {
 		return users.User{}, err
@@ -87,10 +87,10 @@ func (uf *UserRepo) FindByField(value string, field string) (users.User, error) 
 	return dataToUser(fireUser)
 }
 
-func (uf *UserRepo) All() ([]users.User, error) {
+func (r *UserRepo) All() ([]users.User, error) {
 	var usersCollection []users.User
 	var fireUser User
-	iter := uf.client.Collection(CollectionName).Documents(uf.ctx)
+	iter := r.client.Collection(CollectionName).Documents(r.ctx)
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -110,21 +110,21 @@ func (uf *UserRepo) All() ([]users.User, error) {
 	return usersCollection, nil
 }
 
-func (uf *UserRepo) DeleteAll() error {
-	ref := uf.client.Collection(CollectionName)
-	return deleteCollection(uf.ctx, uf.client, ref, 100)
+func (r *UserRepo) DeleteAll() error {
+	ref := r.client.Collection(CollectionName)
+	return deleteCollection(r.ctx, r.client, ref, 100)
 }
 
-func dataToUser(fu User) (users.User, error) {
-	userName, err := users.NewUsername(fu.Username)
+func dataToUser(localUser User) (users.User, error) {
+	userName, err := users.NewUsername(localUser.Username)
 	if err != nil {
 		return users.User{}, err
 	}
-	userId, err := users.NewUserId(fu.ID)
+	userId, err := users.NewUserId(localUser.ID)
 	if err != nil {
 		return users.User{}, err
 	}
-	user, err := users.NewUser(userId, userName, fu.Email, fu.Password, fu.Role)
+	user, err := users.NewUser(userId, userName, localUser.Email, localUser.Password, localUser.Role)
 	if err != nil {
 		return users.User{}, err
 	}

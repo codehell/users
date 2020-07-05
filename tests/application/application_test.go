@@ -1,10 +1,10 @@
-package application
+package application_test
 
 import (
 	"github.com/codehell/users"
 	"github.com/codehell/users/application"
 	"github.com/codehell/users/infrastructure/repositories/inmemory"
-	"github.com/codehell/users/tests/shared"
+	tests2 "github.com/codehell/users/tests"
 	"reflect"
 	"testing"
 )
@@ -19,7 +19,7 @@ func TestSignIn(t *testing.T) {
 			t.Fatal("can not close the repo")
 		}
 	}()
-	user := shared.GetTestingUser()
+	user := tests2.GetTestingUser()
 	if err := application.StoreUser(repo, user); err != nil {
 		t.Fatal(err)
 	}

@@ -19,17 +19,13 @@ func (*UserRepo) Close() error {
 	return nil
 }
 
-func (fuc *UserRepo) Store(u users.User) error {
-	_, err := fuc.FindByField(u.Email(), "email")
-	if err == nil {
-		return &users.UserAlreadyExistsError
-	}
-	fuc.CreatedUsers = append(fuc.CreatedUsers, u)
+func (r *UserRepo) Store(u users.User) error {
+	r.CreatedUsers = append(r.CreatedUsers, u)
 	return nil
 }
 
-func (fuc *UserRepo) Find(id string) (users.User, error) {
-	for _, u := range fuc.CreatedUsers {
+func (r *UserRepo) Find(id string) (users.User, error) {
+	for _, u := range r.CreatedUsers {
 		if u.Id().Value() == id {
 			return u, nil
 		}
@@ -37,11 +33,11 @@ func (fuc *UserRepo) Find(id string) (users.User, error) {
 	return users.User{}, fmt.Errorf("user with id: %s does not exist", id)
 }
 
-func (fuc *UserRepo) FindByField(value string, field string) (users.User, error) {
+func (r *UserRepo) FindByField(value string, field string) (users.User, error) {
 	if field != "username" && field != "email" {
 		return users.User{}, errors.New("wrong field to find")
 	}
-	for _, u := range fuc.CreatedUsers {
+	for _, u := range r.CreatedUsers {
 		userMap := map[string]string{"username": u.Username().Value(), "email": u.Email()}
 		if userMap[field] == value {
 			return u, nil
@@ -50,11 +46,11 @@ func (fuc *UserRepo) FindByField(value string, field string) (users.User, error)
 	return users.User{}, fmt.Errorf("can not found user by field %s and %s value", field, value)
 }
 
-func (fuc *UserRepo) All() ([]users.User, error) {
-	return fuc.CreatedUsers, nil
+func (r *UserRepo) All() ([]users.User, error) {
+	return r.CreatedUsers, nil
 }
 
-func (fuc *UserRepo) DeleteAll() error {
-	fuc.CreatedUsers = nil
+func (r *UserRepo) DeleteAll() error {
+	r.CreatedUsers = nil
 	return nil
 }

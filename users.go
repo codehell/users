@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"github.com/alexedwards/argon2id"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"time"
@@ -62,7 +63,7 @@ func (u User) MarshalJSON() ([]byte, error) {
 }
 
 func (u *User) UnmarshalJSON(bytes []byte) error {
-	user := userMapper{}
+	var user userMapper
 	if err := json.Unmarshal(bytes, &user); err != nil {
 		return err
 	}
@@ -108,7 +109,7 @@ func (u User) UpdatedAt() time.Time {
 	return u.updatedAt
 }
 
-func Config() (UserConfig, error) {
+func _() (UserConfig, error) {
 	var config UserConfig
 	body, err := ioutil.ReadFile("users.config.yaml")
 	if err != nil {
@@ -119,6 +120,22 @@ func Config() (UserConfig, error) {
 		return config, err
 	}
 	return config, nil
+}
+
+func CheckPassword(hash string, password string) bool {
+	match, err := argon2id.ComparePasswordAndHash(password, hash)
+	if err != nil {
+		return false
+	}
+	return match
+}
+
+func GeneratePassword(password string) (string, error) {
+	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
 }
 
 // UserRepo interface for repositories

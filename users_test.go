@@ -1,15 +1,16 @@
-package tests
+package users_test
 
 import (
 	"encoding/json"
-	"github.com/codehell/users"
-	"github.com/codehell/users/tests/shared"
 	"strings"
 	"testing"
+
+	"github.com/codehell/users"
+	"github.com/codehell/users/testsutils"
 )
 
 func TestOkPassword(t *testing.T) {
-	user := shared.GetTestingUser()
+	user := testsutils.GetTestingUser()
 
 	if !users.CheckPassword(user.Password(), "secret1") {
 		t.Error("password should match")
@@ -17,7 +18,7 @@ func TestOkPassword(t *testing.T) {
 }
 
 func TestWrongPassword(t *testing.T) {
-	user := shared.GetTestingUser()
+	user := testsutils.GetTestingUser()
 
 	badPassword := "badPassword"
 	if users.CheckPassword(user.Password(), badPassword) {
@@ -25,8 +26,8 @@ func TestWrongPassword(t *testing.T) {
 	}
 }
 
-func TestMarshalUser(t *testing.T)  {
-	user := shared.GetTestingUser()
+func TestMarshalUser(t *testing.T) {
+	user := testsutils.GetTestingUser()
 	userJson, err := json.Marshal(user)
 	if err != nil {
 		t.Error("can not marshal user struct")
@@ -37,13 +38,14 @@ func TestMarshalUser(t *testing.T)  {
 }
 
 func TestUnmarshalUser(t *testing.T) {
-	user := shared.GetTestingUser()
+	user := testsutils.GetTestingUser()
 	userJson, err := json.Marshal(user)
 	if err != nil {
 		t.Fatal(err)
 	}
 	userStruct := users.User{}
-	err = json.Unmarshal(userJson, &userStruct); if err != nil {
+	err = json.Unmarshal(userJson, &userStruct)
+	if err != nil {
 		t.Fatal(err)
 	}
 	if userStruct.Email() != "cazaplanetas@gmail.com" {

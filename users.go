@@ -2,11 +2,14 @@ package users
 
 import (
 	"encoding/json"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"time"
+
+	"github.com/alexedwards/argon2id"
+	"gopkg.in/yaml.v2"
 )
 
+// UserConfig struct that represent users module configuration
 type UserConfig struct {
 	UniqueUsername bool `yaml:"unique_username"`
 }
@@ -28,9 +31,10 @@ type userMapper struct {
 	Email     string    `json:"email"`
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdateAt  time.Time `json:"update_at"`
+	UpdatedAt time.Time `json:"update_at"`
 }
 
+// NewUser User entity constructor
 func NewUser(id UserID, username Username, email, password, role string) (User, error) {
 	cryptPassword, err := GeneratePassword(password)
 	if err != nil {
@@ -49,20 +53,22 @@ func NewUser(id UserID, username Username, email, password, role string) (User, 
 	}, nil
 }
 
+// MarshalJSON interface implementation
 func (u User) MarshalJSON() ([]byte, error) {
 	user := userMapper{
-		u.id.Value(),
-		u.username.Value(),
-		u.email,
-		u.role,
-		u.createdAt,
-		u.updatedAt,
+		ID:        u.id.Value(),
+		Username:  u.username.Value(),
+		Email:     u.email,
+		Role:      u.role,
+		CreatedAt: u.createdAt,
+		UpdatedAt: u.updatedAt,
 	}
 	return json.Marshal(user)
 }
 
+// UnmarshalJSON interface implementation
 func (u *User) UnmarshalJSON(bytes []byte) error {
-	user := userMapper{}
+	var user userMapper
 	if err := json.Unmarshal(bytes, &user); err != nil {
 		return err
 	}
@@ -70,45 +76,56 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	userId, err := NewUserId(user.ID)
-	u.id = userId
+	userID, err := NewUserID(user.ID)
+	if err != nil {
+		return err
+	}
+	u.id = userID
 	u.username = username
 	u.email = user.Email
 	u.role = user.Role
 	u.createdAt = user.CreatedAt
-	u.updatedAt = user.UpdateAt
+	u.updatedAt = user.UpdatedAt
 	return nil
 }
 
-func (u User) Id() UserID {
+// ID User property getter
+func (u User) ID() UserID {
 	return u.id
 }
 
+// Username User property getter
 func (u User) Username() Username {
 	return u.username
 }
 
+// Email User property getter
 func (u User) Email() string {
 	return u.email
 }
 
+// Password User property getter
 func (u User) Password() string {
 	return u.password
 }
 
+// Role User property getter
 func (u User) Role() string {
 	return u.role
 }
 
+// CreatedAt User property getter
 func (u User) CreatedAt() time.Time {
 	return u.createdAt
 }
 
+// UpdatedAt User property getter
 func (u User) UpdatedAt() time.Time {
 	return u.updatedAt
 }
 
-func GetConfig() (UserConfig, error) {
+// Config users module configuration getter
+func Config() (UserConfig, error) {
 	var config UserConfig
 	body, err := ioutil.ReadFile("users.config.yaml")
 	if err != nil {
@@ -121,10 +138,29 @@ func GetConfig() (UserConfig, error) {
 	return config, nil
 }
 
+// CheckPassword compare password and hash
+func CheckPassword(hash string, password string) bool {
+	match, err := argon2id.ComparePasswordAndHash(password, hash)
+	if err != nil {
+		return false
+	}
+	return match
+}
+
+// GeneratePassword generate a argon2id password
+func GeneratePassword(password string) (string, error) {
+	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
+}
+
 // UserRepo interface for repositories
 type UserRepo interface {
 	Store(u User) error
 	Find(id string) (User, error)
 	FindByField(value string, field string) (User, error)
-	GetAll() ([]User, error)
+	All() ([]User, error)
+	Close() error
 }

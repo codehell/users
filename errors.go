@@ -1,29 +1,27 @@
 package users
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
-	UserPassWordNotMatchError = Error{Code: "userPasswordNotMatch"}
-	UserNotFoundError         = Error{Code: "userNotFound"}
-	UserAlreadyExistsError    = Error{Code: "userAlreadyExist"}
-	UserSystemError           = Error{Code: "userSystemError"}
-	UserValidationError		  = Error{Code: "userValidationError"}
+	UserPasswordNotMatchError = Error{Code: "userPasswordNotMatch", Err: errors.New("user password not match")}
+	UserNotFoundError         = Error{Code: "userNotFound", Err: errors.New("user not found")}
+	UserAlreadyExistsError    = Error{Code: "userAlreadyExist", Err: errors.New("user already exist")}
+	UserSystemError           = Error{Code: "userSystemError", Err: errors.New("user system error")}
+	UserValidationError       = Error{Code: "userValidationError", Err: errors.New("user validation error")}
 )
 
 type Error struct {
 	Code string
-	err error
+	Err  error
 }
 
-func (e Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.Code, e.err.Error())
+func (e *Error) Error() string {
+	return fmt.Sprintf("%s: %v", e.Code, e.Err)
 }
 
 func (e *Error) Unwrap() error {
-	return e.err
-}
-
-func (e *Error) Wrap(err error) *Error {
-	e.err = err
-	return e
+	return e.Err
 }

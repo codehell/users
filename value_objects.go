@@ -1,17 +1,21 @@
 package users
 
-import "gopkg.in/go-playground/validator.v9"
+import (
+	"fmt"
+
+	"gopkg.in/go-playground/validator.v9"
+)
 
 // UserID value object
 type UserID struct {
 	value string
 }
 
-func NewUserId(userId string) (UserID, error) {
+func NewUserID(userId string) (UserID, error) {
 	validate := validator.New()
 	err := validate.Var(userId, "required,uuid4")
 	if err != nil {
-		return UserID{}, UserValidationError.Wrap(err)
+		return UserID{}, fmt.Errorf("invalid user id %w", &UserValidationError)
 	}
 	return UserID{userId}, nil
 }
@@ -33,7 +37,7 @@ func NewUsername(name string) (Username, error) {
 	validate := validator.New()
 	err := validate.Var(name, "min=5,max=64")
 	if err != nil {
-		return Username{}, UserValidationError.Wrap(err)
+		return Username{}, fmt.Errorf("invalid username: %w", &UserValidationError)
 	}
 	return Username{name}, nil
 }

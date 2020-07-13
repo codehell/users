@@ -1,1 +1,1 @@
-users framework for Go
+Users framework for Go ...a golang DDD implementation

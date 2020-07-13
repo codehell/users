@@ -2,12 +2,14 @@ package users
 
 import (
 	"encoding/json"
-	"github.com/alexedwards/argon2id"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"time"
+
+	"github.com/alexedwards/argon2id"
+	"gopkg.in/yaml.v2"
 )
 
+// UserConfig struct that represent users module configuration
 type UserConfig struct {
 	UniqueUsername bool `yaml:"unique_username"`
 }
@@ -32,6 +34,7 @@ type userMapper struct {
 	UpdatedAt time.Time `json:"update_at"`
 }
 
+// NewUser User entity constructor
 func NewUser(id UserID, username Username, email, password, role string) (User, error) {
 	cryptPassword, err := GeneratePassword(password)
 	if err != nil {
@@ -50,6 +53,7 @@ func NewUser(id UserID, username Username, email, password, role string) (User, 
 	}, nil
 }
 
+// MarshalJSON interface implementation
 func (u User) MarshalJSON() ([]byte, error) {
 	user := userMapper{
 		ID:        u.id.Value(),
@@ -62,6 +66,7 @@ func (u User) MarshalJSON() ([]byte, error) {
 	return json.Marshal(user)
 }
 
+// UnmarshalJSON interface implementation
 func (u *User) UnmarshalJSON(bytes []byte) error {
 	var user userMapper
 	if err := json.Unmarshal(bytes, &user); err != nil {
@@ -71,8 +76,11 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	userId, err := NewUserId(user.ID)
-	u.id = userId
+	userID, err := NewUserID(user.ID)
+	if err != nil {
+		return err
+	}
+	u.id = userID
 	u.username = username
 	u.email = user.Email
 	u.role = user.Role
@@ -81,35 +89,43 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func (u User) Id() UserID {
+// ID User property getter
+func (u User) ID() UserID {
 	return u.id
 }
 
+// Username User property getter
 func (u User) Username() Username {
 	return u.username
 }
 
+// Email User property getter
 func (u User) Email() string {
 	return u.email
 }
 
+// Password User property getter
 func (u User) Password() string {
 	return u.password
 }
 
+// Role User property getter
 func (u User) Role() string {
 	return u.role
 }
 
+// CreatedAt User property getter
 func (u User) CreatedAt() time.Time {
 	return u.createdAt
 }
 
+// UpdatedAt User property getter
 func (u User) UpdatedAt() time.Time {
 	return u.updatedAt
 }
 
-func _() (UserConfig, error) {
+// Config users module configuration getter
+func Config() (UserConfig, error) {
 	var config UserConfig
 	body, err := ioutil.ReadFile("users.config.yaml")
 	if err != nil {
@@ -122,6 +138,7 @@ func _() (UserConfig, error) {
 	return config, nil
 }
 
+// CheckPassword compare password and hash
 func CheckPassword(hash string, password string) bool {
 	match, err := argon2id.ComparePasswordAndHash(password, hash)
 	if err != nil {
@@ -130,6 +147,7 @@ func CheckPassword(hash string, password string) bool {
 	return match
 }
 
+// GeneratePassword generate a argon2id password
 func GeneratePassword(password string) (string, error) {
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {

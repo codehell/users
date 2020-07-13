@@ -1,10 +1,11 @@
-package tests
+package testsutils
 
 import (
+	"log"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/codehell/users"
 	"github.com/google/uuid"
-	"log"
 )
 
 func GetTestingUser() users.User {
@@ -12,7 +13,7 @@ func GetTestingUser() users.User {
 	if err != nil {
 		log.Fatal(err)
 	}
-	userId, err := users.NewUserId(uuid.New().String())
+	userId, err := users.NewUserID(uuid.New().String())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +29,7 @@ func GetTestingUser() users.User {
 
 func CreateUser() users.User {
 	username, _ := users.NewUsername(faker.Username())
-	userId, _ := users.NewUserId(uuid.New().String())
+	userId, _ := users.NewUserID(uuid.New().String())
 	email := faker.Email()
 	password := faker.Password()[:12]
 	role := "admin"

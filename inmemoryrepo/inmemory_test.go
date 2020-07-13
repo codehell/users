@@ -1,22 +1,22 @@
-package inmemory_test
+package inmemoryrepo_test
 
 import (
 	"errors"
-	"github.com/codehell/users"
-	"github.com/codehell/users/application"
-	"github.com/codehell/users/infrastructure/repositories/inmemory"
-	"github.com/codehell/users/tests"
 	"testing"
+
+	"github.com/codehell/users"
+	"github.com/codehell/users/inmemoryrepo"
+	"github.com/codehell/users/testsutils"
 )
 
 func TestStoreUser(t *testing.T) {
-	repo, err := inmemory.NewRepo()
+	repo, err := inmemoryrepo.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	user := tests.GetTestingUser()
-	if err := application.StoreUser(repo, user); err != nil {
+	user := testsutils.GetTestingUser()
+	if err := users.StoreUser(repo, user); err != nil {
 		t.Fatal(err)
 	}
 	if err = repo.DeleteAll(); err != nil {
@@ -25,17 +25,17 @@ func TestStoreUser(t *testing.T) {
 }
 
 func TestUserAlreadyError(t *testing.T) {
-	repo, err := inmemory.NewRepo()
+	repo, err := inmemoryrepo.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	user := tests.GetTestingUser()
-	if err := application.StoreUser(repo, user); err != nil {
+	user := testsutils.GetTestingUser()
+	if err := users.StoreUser(repo, user); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := application.StoreUser(repo, user); !errors.Is(&users.UserAlreadyExistsError, err) {
+	if err := users.StoreUser(repo, user); !errors.Is(&users.UserAlreadyExistsError, err) {
 		t.Errorf("expected error %s", users.UserAlreadyExistsError)
 	}
 	if err = repo.DeleteAll(); err != nil {
@@ -44,15 +44,15 @@ func TestUserAlreadyError(t *testing.T) {
 }
 
 func TestAllUsers(t *testing.T) {
-	repo, err := inmemory.NewRepo()
+	repo, err := inmemoryrepo.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	if err := tests.CreateTenUsers(repo); err != nil {
+	if err := testsutils.CreateTenUsers(repo); err != nil {
 		t.Fatal(err)
 	}
-	myUsers, err := application.AllUsers(repo)
+	myUsers, err := users.AllUsers(repo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,17 +67,17 @@ func TestAllUsers(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	repo, err := inmemory.NewRepo()
+	repo, err := inmemoryrepo.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	user := tests.GetTestingUser()
-	if err := application.StoreUser(repo,user); err != nil {
+	user := testsutils.GetTestingUser()
+	if err := users.StoreUser(repo, user); err != nil {
 		t.Fatal(err)
 	}
 
-	user, err = application.Find(repo, user.Id())
+	user, err = users.Find(repo, user.ID())
 	if err != nil {
 		t.Fatal("can not find user")
 	}
@@ -88,17 +88,17 @@ func TestFind(t *testing.T) {
 }
 
 func TestFindField(t *testing.T) {
-	repo, err := inmemory.NewRepo()
+	repo, err := inmemoryrepo.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	user := tests.GetTestingUser()
-	if err := application.StoreUser(repo, user); err != nil {
+	user := testsutils.GetTestingUser()
+	if err := users.StoreUser(repo, user); err != nil {
 		t.Errorf("can not store user: %v", err)
 	}
 
-	user, err = application.FindByField(repo, user.Email(), "email")
+	user, err = users.FindByField(repo, user.Email(), "email")
 	if err != nil {
 		t.Fatal("can not find user")
 	}
@@ -113,16 +113,16 @@ func TestFindField(t *testing.T) {
 }
 
 func TestSignIn(t *testing.T) {
-	repo, err := inmemory.NewRepo()
+	repo, err := inmemoryrepo.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
 	defer repo.Close()
-	user := tests.GetTestingUser()
-	if err := application.StoreUser(repo, user); err != nil {
+	user := testsutils.GetTestingUser()
+	if err := users.StoreUser(repo, user); err != nil {
 		t.Errorf("can not store user: %v", err)
 	}
-	_, err = application.SignIn(repo, "cazaplanetas@gmail.com", "secret1")
+	_, err = users.SignIn(repo, "cazaplanetas@gmail.com", "secret1")
 	if err != nil {
 		t.Error(err)
 	}

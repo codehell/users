@@ -1,16 +1,16 @@
-package application_test
+package users_test
 
 import (
-	"github.com/codehell/users"
-	"github.com/codehell/users/application"
-	"github.com/codehell/users/infrastructure/repositories/inmemory"
-	tests2 "github.com/codehell/users/tests"
 	"reflect"
 	"testing"
+
+	"github.com/codehell/users"
+	"github.com/codehell/users/inmemoryrepo"
+	"github.com/codehell/users/testsutils"
 )
 
 func TestSignIn(t *testing.T) {
-	repo, err := inmemory.NewRepo()
+	repo, err := inmemoryrepo.NewRepo()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}
@@ -19,8 +19,8 @@ func TestSignIn(t *testing.T) {
 			t.Fatal("can not close the repo")
 		}
 	}()
-	user := tests2.GetTestingUser()
-	if err := application.StoreUser(repo, user); err != nil {
+	user := testsutils.GetTestingUser()
+	if err := users.StoreUser(repo, user); err != nil {
 		t.Fatal(err)
 	}
 	type args struct {
@@ -67,7 +67,7 @@ func TestSignIn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := application.SignIn(tt.args.userRepo, tt.args.email, tt.args.password)
+			got, err := users.SignIn(tt.args.userRepo, tt.args.email, tt.args.password)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SignIn() error = %v, wantErr %v", err, tt.wantErr)
 				return

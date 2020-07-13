@@ -1,11 +1,12 @@
-package firestore
+package firestorerepo
 
 import (
-	"cloud.google.com/go/firestore"
 	"context"
+	"time"
+
+	"cloud.google.com/go/firestore"
 	"github.com/codehell/users"
 	"google.golang.org/api/iterator"
-	"time"
 )
 
 const CollectionName = "users"
@@ -46,7 +47,7 @@ func (r *UserRepo) Close() error {
 
 func (r *UserRepo) Store(user users.User) error {
 	localUser := User{
-		ID:        user.Id().Value(),
+		ID:        user.ID().Value(),
 		Username:  user.Username().Value(),
 		Email:     user.Email(),
 		Password:  user.Password(),
@@ -54,7 +55,7 @@ func (r *UserRepo) Store(user users.User) error {
 		CreatedAt: user.CreatedAt(),
 		UpdatedAt: user.UpdatedAt(),
 	}
-	_, err := r.client.Collection(CollectionName).Doc(user.Id().Value()).Set(r.ctx, localUser)
+	_, err := r.client.Collection(CollectionName).Doc(user.ID().Value()).Set(r.ctx, localUser)
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ func dataToUser(localUser User) (users.User, error) {
 	if err != nil {
 		return users.User{}, err
 	}
-	userId, err := users.NewUserId(localUser.ID)
+	userId, err := users.NewUserID(localUser.ID)
 	if err != nil {
 		return users.User{}, err
 	}

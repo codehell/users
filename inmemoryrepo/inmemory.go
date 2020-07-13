@@ -1,4 +1,4 @@
-package inmemory
+package inmemoryrepo
 
 import (
 	"errors"
@@ -26,7 +26,7 @@ func (r *UserRepo) Store(u users.User) error {
 
 func (r *UserRepo) Find(id string) (users.User, error) {
 	for _, u := range r.CreatedUsers {
-		if u.Id().Value() == id {
+		if u.ID().Value() == id {
 			return u, nil
 		}
 	}

@@ -2,6 +2,7 @@ package users
 
 import (
 	"fmt"
+
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -10,7 +11,7 @@ type UserID struct {
 	value string
 }
 
-func NewUserId(userId string) (UserID, error) {
+func NewUserID(userId string) (UserID, error) {
 	validate := validator.New()
 	err := validate.Var(userId, "required,uuid4")
 	if err != nil {

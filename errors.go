@@ -19,9 +19,5 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("%s: %v", e.Code, e.Err)
-}
-
-func (e *Error) Unwrap() error {
-	return e.Err
+	return fmt.Sprintf("code: %s - description: %v", e.Code, e.Err)
 }

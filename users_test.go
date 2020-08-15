@@ -2,6 +2,7 @@ package users_test
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
@@ -23,6 +24,16 @@ func TestWrongPassword(t *testing.T) {
 	badPassword := "badPassword"
 	if users.CheckPassword(user.Password(), badPassword) {
 		t.Error("password should not match")
+	}
+}
+
+func TestWrongUsername(t *testing.T) {
+	_, err := users.NewUsername("luck")
+	if err == nil {
+		t.Error("expected invalid user name, has no error")
+	}
+	if !errors.Is(err, &users.UserValidationError) {
+		t.Errorf("expected UserValidationError, has %v", err)
 	}
 }
 

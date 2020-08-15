@@ -55,15 +55,14 @@ func NewUser(id UserID, username Username, email, password, role string) (User, 
 
 // MarshalJSON interface implementation
 func (u User) MarshalJSON() ([]byte, error) {
-	user := userMapper{
+	return json.Marshal(userMapper{
 		ID:        u.id.Value(),
 		Username:  u.username.Value(),
 		Email:     u.email,
 		Role:      u.role,
 		CreatedAt: u.createdAt,
 		UpdatedAt: u.updatedAt,
-	}
-	return json.Marshal(user)
+	})
 }
 
 // UnmarshalJSON interface implementation

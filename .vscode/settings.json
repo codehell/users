@@ -28,4 +28,9 @@
     "go.testEnvVars": {
         "FIRESTORE_EMULATOR_HOST":"localhost:8442"
     },
+    "cSpell.words": [
+        "cazaplanetas",
+        "inmemoryrepo",
+        "testsutils"
+    ],
 }

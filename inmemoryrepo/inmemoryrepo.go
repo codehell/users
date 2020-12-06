@@ -10,7 +10,7 @@ type UserRepo struct {
 	CreatedUsers []users.User
 }
 
-func NewRepo() (*UserRepo, error) {
+func New() (*UserRepo, error) {
 	fakeUsersClient := new(UserRepo)
 	return fakeUsersClient, nil
 }
@@ -24,16 +24,17 @@ func (r *UserRepo) Store(u users.User) error {
 	return nil
 }
 
-func (r *UserRepo) Find(id string) (users.User, error) {
+func (r *UserRepo) Search(id string) (users.User, error) {
 	for _, u := range r.CreatedUsers {
 		if u.ID().Value() == id {
 			return u, nil
 		}
 	}
-	return users.User{}, fmt.Errorf("user with id: %s does not exist", id)
+	searchError := fmt.Errorf("user with id: %s does not exist: %w", id, &users.UserNotFoundError)
+	return users.User{}, searchError
 }
 
-func (r *UserRepo) FindByField(value string, field string) (users.User, error) {
+func (r *UserRepo) SearchByField(value string, field string) (users.User, error) {
 	if field != "username" && field != "email" {
 		return users.User{}, errors.New("wrong field to find")
 	}

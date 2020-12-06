@@ -158,8 +158,8 @@ func GeneratePassword(password string) (string, error) {
 // UserRepo interface for repositories
 type UserRepo interface {
 	Store(u User) error
-	Find(id string) (User, error)
-	FindByField(value string, field string) (User, error)
+	Search(id string) (User, error)
+	SearchByField(value string, field string) (User, error)
 	All() ([]User, error)
 	Close() error
 }

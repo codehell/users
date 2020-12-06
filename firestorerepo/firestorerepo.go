@@ -46,7 +46,7 @@ func (r *UserRepo) Close() error {
 }
 
 func (r *UserRepo) Store(user users.User) error {
-	localUser := User{
+	repoUser := User{
 		ID:        user.ID().Value(),
 		Username:  user.Username().Value(),
 		Email:     user.Email(),
@@ -55,14 +55,14 @@ func (r *UserRepo) Store(user users.User) error {
 		CreatedAt: user.CreatedAt(),
 		UpdatedAt: user.UpdatedAt(),
 	}
-	_, err := r.client.Collection(CollectionName).Doc(user.ID().Value()).Set(r.ctx, localUser)
+	_, err := r.client.Collection(CollectionName).Doc(user.ID().Value()).Set(r.ctx, repoUser)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *UserRepo) Find(id string) (users.User, error) {
+func (r *UserRepo) Search(id string) (users.User, error) {
 	var fireUser User
 	var user users.User
 	doc, err := r.client.Collection(CollectionName).Doc(id).Get(r.ctx)
@@ -75,7 +75,7 @@ func (r *UserRepo) Find(id string) (users.User, error) {
 	return dataToUser(fireUser)
 }
 
-func (r *UserRepo) FindByField(value string, field string) (users.User, error) {
+func (r *UserRepo) SearchByField(value string, field string) (users.User, error) {
 	iter := r.client.Collection(CollectionName).Where(field, "==", value).Documents(r.ctx)
 	doc, err := iter.Next()
 	if err != nil {

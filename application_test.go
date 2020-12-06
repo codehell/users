@@ -10,7 +10,7 @@ import (
 )
 
 func TestSignIn(t *testing.T) {
-	repo, err := inmemoryrepo.NewRepo()
+	repo, err := inmemoryrepo.New()
 	if err != nil {
 		t.Fatal("can not create repo")
 	}

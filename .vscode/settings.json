@@ -30,7 +30,17 @@
     },
     "cSpell.words": [
         "cazaplanetas",
+        "dbname",
         "inmemoryrepo",
+        "jmoiron",
+        "postgresqlrepo",
+        "sqlx",
         "testsutils"
     ],
+    "vim.insertModeKeyBindings": [
+    {
+      "before": ["j", "j"],
+      "after": ["<Esc>"]
+    }
+  ],
 }
